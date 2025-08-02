@@ -214,7 +214,7 @@ namespace Imagine.WebAR.Editor
 		[MenuItem("Assets/Imagine WebAR/Create/AR Camera", false, 1120)]
 		public static void CreateImageTrackerCamera()
 		{
-			GameObject prefab = (GameObject)AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Imagine/ImageTracker/Prefabs/ARCamera.prefab");
+			GameObject prefab = (GameObject)AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Imagine/Common/Prefabs/ARCamera.prefab");
 			GameObject gameObject = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
 			PrefabUtility.UnpackPrefabInstance(gameObject, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
 			Selection.activeGameObject = gameObject;

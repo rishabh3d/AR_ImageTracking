@@ -6,12 +6,13 @@ using UnityEngine.UI;
 /// <summary>
 /// This script calculate the current fps and show it to a text ui.
 /// </summary>
+using TMPro;
 
 namespace Imagine.WebAR.Samples
 {
     public class DemoFPSCounter : MonoBehaviour
     {
-        [SerializeField] private Text fpsText;
+        [SerializeField] private TextMeshProUGUI fpsText;
 
         public float updateRateSeconds = 4.0F;
 

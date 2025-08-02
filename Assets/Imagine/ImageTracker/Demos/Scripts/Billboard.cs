@@ -10,8 +10,6 @@ namespace Imagine.WebAR.Samples
         
         private enum BillboardMode {Y_UP, ALL_AXES}
         [SerializeField] BillboardMode mode = BillboardMode.Y_UP;
-        [SerializeField] bool negative = false;
-
         void LateUpdate()
         {
             if (mode == BillboardMode.ALL_AXES){

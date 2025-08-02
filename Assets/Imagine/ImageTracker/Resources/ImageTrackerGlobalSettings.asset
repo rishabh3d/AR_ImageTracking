@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: ImageTrackerGlobalSettings
   m_EditorClassIdentifier: 
   imageTargetInfos:
+  - id: bear
+    texture: {fileID: 2800000, guid: 174b033aeb9c8482aa43686a5271d72b, type: 3}
   - id: bfly
     texture: {fileID: 2800000, guid: 51cd527e8ff5d4040a756da7cafdc9a7, type: 3}
   - id: flower
@@ -23,18 +25,16 @@ MonoBehaviour:
     texture: {fileID: 2800000, guid: 39980db0759a547a5b9f3e413c7972e4, type: 3}
   - id: rmn
     texture: {fileID: 2800000, guid: e7fd3cb830773404693d049b4e6582a8, type: 3}
-  - id: bear
-    texture: {fileID: 2800000, guid: 174b033aeb9c8482aa43686a5271d72b, type: 3}
-  - id: IMG_0062_1
-    texture: {fileID: 2800000, guid: 7873757acca4a47bbb305c4c22c417c4, type: 3}
-  - id: IMG_0062_1
-    texture: {fileID: 2800000, guid: 7873757acca4a47bbb305c4c22c417c4, type: 3}
-  defaultTrackerSettings:
-    maxSimultaneousTargets: 1
-    targetFrameRate: 30
-    advancedSettings:
-      maxFrameLength: 500
-      maxFrameArea: 40
-      trackedPoints: 25
-      detectInterval: 200
-    debugMode: 0
+  - id: rockBird
+    texture: {fileID: 2800000, guid: 18f694399b8ba02468dc3a1eaf43e957, type: 3}
+  - id: light
+    texture: {fileID: 2800000, guid: e63f10fd4862ef74ba0c8cabceea67c6, type: 3}
+  - id: lookBird
+    texture: {fileID: 2800000, guid: b0add434c10951d4e9533472563eeee3, type: 3}
+  settingsTemplates:
+  - {fileID: 11400000, guid: 35c99cc7b662a46eb89cc7a32e239494, type: 2}
+  - {fileID: 11400000, guid: 9cf415d375f91458483df57436950575, type: 2}
+  - {fileID: 11400000, guid: 0508c212924fd4cb2bf988475d28faa3, type: 2}
+  - {fileID: 11400000, guid: 7076d90bd1bc04ee3af02815db0dfee3, type: 2}
+  - {fileID: 11400000, guid: 4c91993c0df8b45b38b50506a4c9b1aa, type: 2}
+  - {fileID: 11400000, guid: 445b583e5873b49c2b6bec84c64d7c38, type: 2}

@@ -1,276 +1,326 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using System.Runtime.InteropServices;
+
+#if IMAGINE_URP
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+#endif
 
 namespace Imagine.WebAR
 {
     [RequireComponent(typeof(Camera))]
     public class ARCamera : MonoBehaviour
     {
-        [DllImport("__Internal")] private static extern void UnpauseWebGLCamera();
-        [DllImport("__Internal")] private static extern void PauseWebGLCamera();
-        [DllImport("__Internal")] private static extern string GetWebGLCameraFrame(string typeStr);
-        [DllImport("__Internal")] private static extern string GetWebGLCameraName();
+        [DllImport("__Internal")] private static extern void SetWebGLARCameraSettings(string settings);
+        [DllImport("__Internal")] private static extern void WebGLStartCamera();
+        [DllImport("__Internal")] private static extern bool WebGLIsCameraStarted();
+        [DllImport("__Internal")] private static extern void WebGLUnpauseCamera();
+        [DllImport("__Internal")] private static extern void WebGLPauseCamera();
+        [DllImport("__Internal")] private static extern void WebGLGetCameraTexture(int textureId);
+        [DllImport("__Internal")] private static extern string WebGLGetVideoDims();
+        [DllImport("__Internal")] private static extern string WebGLSubscribeVideoTexturePtr(int textureId);
+        [DllImport("__Internal")] private static extern bool IsWebcamPermissionGranted();
+        [DllImport("__Internal")] private static extern void WebGLFlipCamera();
+        [DllImport("__Internal")] private static extern bool WebGLIsCameraFlipped();
 
-
-        [HideInInspector] public Camera cam;
-
-        [Header("*Experimental")]
-        [SerializeField] string editorCamera = "";
-        [SerializeField] bool paused = false;
-
-        public enum VideoPlaneMode {
+         public enum VideoPlaneMode {
             NONE,
-            EXPERIMENTAL_WEBCAMTEXTURE,
-            EXPERIMENTAL_DATAURLTEXTURE
+            TEXTURE_PTR,
         }
 
-        [SerializeField] public VideoPlaneMode videoPlaneMode = VideoPlaneMode.NONE;
-        [SerializeField] float videoDistance = 100;
-        GameObject videoBackground;
-        public bool webcamTextureInitializing = false;
-        WebCamTexture webcamTexture;
+        [SerializeField] public VideoPlaneMode videoPlaneMode = VideoPlaneMode.TEXTURE_PTR;
+        [SerializeField] private Material videoPlaneMat;
+        [SerializeField] private float videoDistance = 100;
 
-        Texture2D dataUrlTexture;
+        [SerializeField] public UnityEvent<Vector2> OnResized;
         
+        [HideInInspector] public Camera cam;
+        private GameObject videoBackground;
+        private Texture2D videoTexture;
+        private int videoTextureId;
+
+
+        [Space][SerializeField] private bool unpausePauseOnEnableDisable = false;
+        [SerializeField] private bool pauseOnDestroy = false;
+        private bool paused = false;
+
+        [SerializeField] private bool pauseOnApplicationLostFocus = false;
+        [SerializeField][Range(0,1000)]private int resizeDelay = 50;
+        
+        [SerializeField] public UnityEvent<bool> OnCameraImageFlipped;
+        [HideInInspector] public bool isFlipped = false;
+
+
+        public enum ARCameraOrientation {PORTRAIT, LANDSCAPE};
+        [SerializeField] public UnityEvent<ARCameraOrientation> OnCameraOrientationChanged;
+        
+        [HideInInspector] public ARCameraOrientation orientation;
 
         private void Awake()
         {
             cam = GetComponent<Camera>();
         }
 
-        private void Start()
+        private IEnumerator Start()
         {
-            if (videoPlaneMode == VideoPlaneMode.EXPERIMENTAL_WEBCAMTEXTURE)
-            {
-                InitWebcam();
-            }
-
-            else if (videoPlaneMode == VideoPlaneMode.EXPERIMENTAL_DATAURLTEXTURE)
-            {
-                InitVideoPlane();
-            }
-        }
-
-        void InitWebcam()
-        {
-            StartCoroutine(InitializeWebcamRoutine());
-        }
-
-        IEnumerator InitializeWebcamRoutine()
-        {
-            Debug.Log("Init Webcam");
-
-            var devices = WebCamTexture.devices;
-            for (var i = 0; i < devices.Length; i++)
-            {
-                Debug.Log(devices[i].name);
-#if !UNITY_EDITOR                
-                if (!devices[i].isFrontFacing)
-                {
-                    editorCamera = devices[i].name;
-                    Debug.Log("Selected " + editorCamera);
-
-                    break;
-                }
+#if UNITY_WEBGL && !UNITY_EDITOR
+            isFlipped = WebGLIsCameraFlipped();
 #endif
-            }
-
-#if !UNITY_EDITOR
-            var camName = GetWebGLCameraName();
-            if (!string.IsNullOrEmpty(camName))
-            {
-                Debug.Log("Got camName " + camName);
-                editorCamera = camName;
-            }
-#endif
-
-            videoBackground = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            videoBackground.name = "VideoBackground";
-            videoBackground.transform.parent = transform;
-            videoBackground.transform.localPosition = new Vector3(0, 0, -1000);
-            //videoBackground.transform.localEulerAngles = new Vector3(30, 0, 0);
+            OnCameraImageFlipped?.Invoke(isFlipped);
+            OnCameraOrientationChanged?.Invoke(Screen.height > Screen.width ? ARCameraOrientation.PORTRAIT : ARCameraOrientation.LANDSCAPE);
 
             
-
-            yield return new WaitForEndOfFrame();
-
-            bool success = true;
-            webcamTextureInitializing = true;
-
-            if (!string.IsNullOrEmpty(editorCamera))
+#if IMAGINE_URP
+            //Debug.Log(GraphicsSettings.defaultRenderPipeline.GetType());
+            if (GraphicsSettings.currentRenderPipeline != null &&
+                 GraphicsSettings.defaultRenderPipeline.GetType().ToString().EndsWith("UniversalRenderPipelineAsset") &&
+                 videoPlaneMode == VideoPlaneMode.NONE
+                 )
             {
-                Debug.Log("Starting " + editorCamera);
-                webcamTexture = new WebCamTexture(editorCamera);
+                Debug.Log("URP detected");
+                cam.clearFlags = CameraClearFlags.Depth;
+                cam.allowHDR = false;
+                var camData = GetComponent<UniversalAdditionalCameraData>();
+                camData.renderPostProcessing = false;
+
+                Debug.Log(cam.clearFlags + " " + camData.renderPostProcessing);
             }
-
-            else
-            {
-                Debug.LogWarning("No back facing camera found");
-                webcamTexture = new WebCamTexture();
-            }
-
-            webcamTexture.Play();
-
-            float startTime = Time.time;
-            float timeoutDuration = 10;
-            while (webcamTexture.width <= 16)
-            {
-                Debug.Log("Waiting for " + editorCamera);
-                yield return new WaitForEndOfFrame();
-                if (Time.time - startTime > timeoutDuration)
-                {
-                    success = false; break;
-                }
-            }
-
-            webcamTextureInitializing = false;
-
-            Debug.Log("Completed...");
-
-
-            if (success)
-            {
-                Debug.Log("Webcam Texture Initialized");
-                var material = new Material(Shader.Find("Unlit/Texture"));
-                material.mainTexture = webcamTexture;
-                videoBackground.GetComponent<Renderer>().material = material;
-
-                SetVideoDimensions();
-
-                videoBackground.transform.localPosition = new Vector3(0, 0, videoDistance);
-            }
-
-            else
-            {
-                Debug.LogError("Webcam Texture Initialization Failed");
-                Destroy(videoBackground);
-            }
-
+#endif
+            SetARCameraSettings();
+            StartCamera();
+            yield break;
+            
         }
 
-        void SetVideoDimensions()
-        {
-            if (videoBackground && webcamTexture)
-            {
-                var v_ar = (float)webcamTexture.width / webcamTexture.height; var ar = (float)Screen.width / (float)Screen.height;
-                float height = 2 * videoDistance * Mathf.Tan(cam.fieldOfView * Mathf.Deg2Rad / 2); float width = height * ar;
-
-                if (v_ar > ar) //bleed horizontally
-                {
-                    Debug.Log("bleed horizontal");
-                    videoBackground.transform.localScale = new Vector3(height * v_ar, height, 1);
-                } 
-
-                else //bleed vertically
-                {
-                    Debug.Log("bleed vertical"); 
-                    videoBackground.transform.localScale = new Vector3(width, width / v_ar, 1);
-                }
-            }
-
+        private void OnEnable(){
+            if(unpausePauseOnEnableDisable)
+                UnpauseCamera();
         }
 
-        void InitVideoPlane()
-        {
-            Debug.Log("Init Video Plane");
-
-            videoBackground = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            videoBackground.name = "VideoBackground";
-            videoBackground.transform.parent = transform;
-            //videoBackground.transform.localPosition = new Vector3(0, 0, -1000);
-            //videoBackground.transform.localEulerAngles = new Vector3(45, 0, 0);
-
-            var material = new Material(Shader.Find("Unlit/Texture"));
-            material.mainTexture = dataUrlTexture;
-            videoBackground.GetComponent<Renderer>().material = material;
-
-            SetVideoDimensions(videoWidth, videoHeight);
-
-            videoBackground.transform.localPosition = new Vector3(0, 0, videoDistance);
+        private void OnDisable(){
+            if(unpausePauseOnEnableDisable)
+                PauseCamera();
         }
 
-        public void UnpauseCamera()
-        {
-            if (videoPlaneMode == VideoPlaneMode.EXPERIMENTAL_WEBCAMTEXTURE && webcamTexture != null)
-            {
-                webcamTexture.Play();
-            }
-            else
-            {
-                UnpauseWebGLCamera();
-            }
+        private void OnDestroy(){
+            if(pauseOnDestroy)
+                PauseCamera();
+        }
 
-            paused = false;
+        void SetARCameraSettings(){
+
+            var json = "{";
+            json += "\"UNITY_VIDEOPLANE\":" + (videoPlaneMode != VideoPlaneMode.NONE ? "true" : "false") +  ",";
+            json += "\"RESIZE_DELAY\":" + resizeDelay;
+            json += "}";
+#if UNITY_WEBGL && !UNITY_EDITOR
+            SetWebGLARCameraSettings(json);
+#endif
+        }
+
+        void StartCamera(){
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if(WebGLIsCameraStarted()){
+                Debug.Log("SetVideoDims");
+                SetVideoDims();
+            }
+            else{
+                Debug.Log("StartCamera");
+                WebGLStartCamera();
+            }
+#endif  
+        }
+
+        void OnStartWebcamSuccess(){
+            SetVideoDims();
+        }
+
+        void OnStartWebcamFail(){
+            Debug.LogError("Webcam failed to start!");
+        }
+
+        void SetCameraFov(float fov)
+        {
+            cam.fieldOfView = fov;
+            Debug.Log("SetCameraFov " + cam.fieldOfView);
         }
 
         public void PauseCamera()
         {
-            if (videoPlaneMode == VideoPlaneMode.EXPERIMENTAL_WEBCAMTEXTURE && webcamTexture != null)
-            {
-                webcamTexture.Pause();
-            }
-            else
-            {
-                PauseWebGLCamera();
-            }
+            if(paused)
+                return;
 
+            Debug.Log("Pausing Camera...");
+#if UNITY_WEBGL && !UNITY_EDITOR
+            WebGLPauseCamera();
+#endif
             paused = true;
         }
 
-        private void Update()
+        public void UnpauseCamera()
         {
-            if( videoPlaneMode == VideoPlaneMode.EXPERIMENTAL_DATAURLTEXTURE &&
-                videoBackground != null &&
-                videoWidth > 1 &&
-                videoHeight > 1 &&
-                !paused)
+            if(!paused)
+                return;
+
+            Debug.Log("Unpausing Camera...");
+#if UNITY_WEBGL && !UNITY_EDITOR
+            WebGLUnpauseCamera();
+#endif
+            paused = false;
+        }
+
+
+
+        public void Resize(string dims)
+        {
+
+// #if UNITY_WEBGL && !UNITY_EDITOR
+//             //this will tell arCamera in js if unity is also rendering a videoplane
+//             //and will avoid rendering duplicate planes, and save some fps
+//             WebGLUseUnityVideoPlane(videoPlaneMode != VideoPlaneMode.NONE);
+// #endif
+
+            var vals = dims.Split(new string[] { "," }, System.StringSplitOptions.RemoveEmptyEntries);
+            var width = int.Parse(vals[0]);
+            var height = int.Parse(vals[1]);
+
+            Debug.Log("Got Video Texture Size - " + width + " x " + height);
+            OnResized?.Invoke(new Vector2(width, height));
+
+            if(videoPlaneMode == VideoPlaneMode.NONE)
             {
-                GetCameraFrame();
+                //we resize only when videoplane is active
+                return;
+            }
+
+            if(videoBackground != null){
+                Destroy(videoBackground);
+            }
+            CreateVideoPlane(width, height);
+
+            if(videoTexture != null)
+                Destroy(videoTexture);
+            
+            videoTexture = new Texture2D(width, height);
+
+
+            videoPlaneMat.mainTexture = videoTexture;
+            videoTextureId = (int)videoTexture.GetNativeTexturePtr();
+
+            Debug.Log("Unity WebGLSubscribeVideoTexturePtr -> " + videoTextureId);
+#if UNITY_WEBGL && !UNITY_EDITOR
+            WebGLSubscribeVideoTexturePtr(videoTextureId);
+#endif
+
+        }
+
+
+        void CreateVideoPlane(int width, int height)
+        {
+            Debug.Log("Init video plane");
+
+            videoBackground = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            videoBackground.name = "VideoBackground";
+            videoBackground.transform.parent = transform;
+
+            videoPlaneMat.mainTexture = null;
+            videoBackground.GetComponent<Renderer>().material = videoPlaneMat;
+
+            var ar = (float)Screen.width / (float)Screen.height;
+            var v_ar = (float)width / (float)height;
+
+            float heightScale = 1;
+
+            if(v_ar > ar){
+                Debug.Log("Bleed horizontally");
+                heightScale = 2 * videoDistance * Mathf.Tan(cam.fieldOfView * Mathf.Deg2Rad / 2);
+            }
+            else{
+                Debug.Log("Bleed vertically");
+                var heightRatio = ar / v_ar;
+                heightScale = 2 * videoDistance * Mathf.Tan(cam.fieldOfView * Mathf.Deg2Rad / 2) * heightRatio;
+            }
+
+            var widthScale = heightScale * v_ar * (isFlipped ? -1 : 1);
+
+            videoBackground.transform.localScale = new Vector3(widthScale, heightScale, 1);
+            videoBackground.transform.localPosition = new Vector3(0, 0, videoDistance);
+            videoBackground.transform.localEulerAngles = Vector3.zero;
+        }
+
+        void SetVideoDims(){
+            Resize( WebGLGetVideoDims());
+        }
+
+        // public void DebugDrawDataUrl(string dataUrl, int width, int height){
+        //     Resize(width + "," + height);
+
+        //     dataUrl = dataUrl.Replace("data:image/png;base64,", "");
+        //     var oldTex = videoPlaneMat.mainTexture;
+        //     if( oldTex != null){
+        //         Destroy(oldTex);
+        //     }
+
+        //     Texture2D tex = new Texture2D (width, height);
+        //     tex.LoadImage(System.Convert.FromBase64String(dataUrl));
+        //     tex.Apply ();
+        //     videoPlaneMat.mainTexture = tex;
+        // }
+
+        void OnApplicationFocus(bool hasFocus)
+        {
+            if(pauseOnApplicationLostFocus){
+#if UNITY_WEBGL && !UNITY_EDITOR
+                if(WebGLIsCameraStarted()){
+                    if(hasFocus)
+                        UnpauseCamera();
+                    else
+                        PauseCamera();
+                }
+#endif
             }
         }
 
-        void GetCameraFrame()
+        void OnApplicationPause(bool pauseStatus)
         {
-            var dataUrlStr = GetWebGLCameraFrame("image/jpeg");
-            dataUrlStr = dataUrlStr.Replace("data:image/jpeg;base64,", "");
-            dataUrlTexture.LoadImage(System.Convert.FromBase64String(dataUrlStr));
-            dataUrlTexture.Apply();
-        }
-
-        private int videoWidth = 1, videoHeight = 1;
-        public void SetVideoDimensions(int w, int h)
-        {
-            Debug.Log("Set Video Dimensions " + w + ", " + h);
-
-            videoWidth = w;
-            videoHeight = h;
-
-            if (videoBackground)
-            {
-                dataUrlTexture = new Texture2D(w, h);
-                videoBackground.GetComponent<Renderer>().material.mainTexture = dataUrlTexture;
-
-                var v_ar = (float) w / h;
-                var ar = (float)Screen.width / (float)Screen.height;
-                float height = 2 * videoDistance * Mathf.Tan(cam.fieldOfView * Mathf.Deg2Rad / 2);
-                float width = height * ar;
-
-                if (v_ar > ar) //bleed horizontally
-                {
-                    Debug.Log("bleed horizontal");
-                    videoBackground.transform.localScale = new Vector3(height * v_ar, height, 1);
+            if(pauseOnApplicationLostFocus){
+#if UNITY_WEBGL && !UNITY_EDITOR
+                if(WebGLIsCameraStarted()){
+                    if(!pauseStatus)
+                        UnpauseCamera();
+                    else
+                        PauseCamera();
                 }
-
-                else //bleed vertically
-                {
-                    Debug.Log("bleed vertical");
-                    videoBackground.transform.localScale = new Vector3(width, width / v_ar, 1);
-                }
+#endif
             }
-
         }
 
+        public void FlipCamera(){
+#if UNITY_WEBGL && !UNITY_EDITOR
+            WebGLFlipCamera();
+#endif
+        }
+        void SetFlippedMessage (string message){
+            Debug.Log("OnFlippedMessage = " + message);
+            isFlipped = message == "true";
+            OnCameraImageFlipped?.Invoke(isFlipped);
+
+            //flip videoPlane
+            if(videoBackground != null){
+                var newScale = videoBackground.transform.localScale;
+                newScale.x = Mathf.Abs(newScale.x) * (isFlipped ? -1 : 1);
+                videoBackground.transform.localScale = newScale;
+            }
+        }
+
+        void SetOrientationMessage (string message){
+            Debug.Log("OrientationMessage = " + message);
+            orientation = message == "PORTRAIT" ? ARCameraOrientation.PORTRAIT : ARCameraOrientation.LANDSCAPE;
+            OnCameraOrientationChanged?.Invoke(orientation);
+        }
     }
 }
+

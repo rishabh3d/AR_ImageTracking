@@ -22,11 +22,14 @@ namespace Imagine.WebAR{
         //[SerializeField] public TrackingQuality trackingQuality = TrackingQuality.BALANCED;
 
 
-        public enum FrameRate { FR_30_FPS = 30, FR_60FPS = 60};
+        public enum FrameRate { FR_30_FPS = 30, FR_60FPS = -1};
 
         [SerializeField] public FrameRate targetFrameRate = FrameRate.FR_30_FPS;
 
         [SerializeField] public AdvancedSettings advancedSettings;
+
+        [SerializeField] [Space] public bool useExtraSmoothing = false;
+        [SerializeField] [Range(1f, 20)] public float smoothenFactor = 10;
         
 
         [Tooltip("If enabled, you can display imageTarget feature points by pressing 'I' in desktop browser")]
@@ -37,8 +40,6 @@ namespace Imagine.WebAR{
             var json = "{";
             json += "\"MAX_SIMULTANEOUS_TRACK\":" + maxSimultaneousTargets + ",";
 
-            //json += "\"QOS\":" + (int)trackingQuality + ",";
-
             json += "\"FRAMERATE\":" + (int)targetFrameRate + ",";
 
             json += "\"MAX_AREA\":" + Mathf.RoundToInt(advancedSettings.maxFrameArea * 1000) + ",";
@@ -47,15 +48,13 @@ namespace Imagine.WebAR{
 
             json += "\"TRACK_TARGET_MATCH_COUNT\":" + advancedSettings.trackedPoints + ",";
 
-             json += "\"DETECT_INTERVAL\":" + advancedSettings.detectInterval;
+            json += "\"POSE_CORRECTION_INTERVAL\":" + advancedSettings.poseCorrectionInterval + ",";
 
-            /*json += "\"KALMAN_POSE_POS_FACTOR\":" + advancedSettings.noiseFiltering.smoothingThresholdPos.ToStringInvariantCulture() + ",";
-            json += "\"KALMAN_POSE_ROT_FACTOR\":" + advancedSettings.noiseFiltering.smoothingThresholdRot.ToStringInvariantCulture() + ",";
-            json += "\"KALMAN_MEAS_NOISE_POS\":"  + advancedSettings.noiseFiltering.smoothingStrengthPos.ToStringInvariantCulture() + ",";
-            json += "\"KALMAN_MEAS_NOISE_ROT\":"  + advancedSettings.noiseFiltering.smoothingStrengthRot.ToStringInvariantCulture() + ",";
+            json += "\"DETECT_INTERVAL\":" + advancedSettings.detectInterval + ",";
 
-            json += "\"STABLE_POSE_POS_FACTOR\":" + advancedSettings.stability.stabilityThresholdPos.ToStringInvariantCulture() + ",";
-            json += "\"STABLE_POSE_ROT_FACTOR\":" + advancedSettings.stability.stabilityThresholdRot.ToStringInvariantCulture();*/
+            json += "\"DETECTABILITY\":" + advancedSettings.detectability.ToStringInvariantCulture() + ",";
+
+            json += "\"DETECT_ZONE\":\"" + advancedSettings.detectZone + "\"";
 
             json += "}";
 
@@ -68,50 +67,37 @@ namespace Imagine.WebAR{
     public class AdvancedSettings
     {
         [Tooltip("Higher values will increase accuracy, but decreases frame rate")]
-        [SerializeField][Range(300, 600)]
-        public int maxFrameLength = 500;
+        [SerializeField][Range(240, 500)]
+        public int maxFrameLength = 450;
 
         [Tooltip("Higher values will make the image easily detected, but induces a short lag/delay")]
-        [SerializeField] [Range(24, 80)] public float maxFrameArea = 40;
+        [SerializeField] [Range(24, 80)] public float maxFrameArea = 80;
 
         [Tooltip("Higher values will improve stability, but decreases frame rate")]
-        [SerializeField] [Range(16, 80)] public int trackedPoints = 25;
+        [SerializeField] [Range(16, 80)] public int trackedPoints = 80;
 
+        [Tooltip("Lower values will be resistant to skewing, but introduces jitter")]
+        [SerializeField] [Range(200, 3000)] public int poseCorrectionInterval = 1500;
+
+        [Space]
         [Tooltip("Lower intervals will speed up detection, especially on multiple targets, but significantly decreases frame rate. Value in millisecods")]
-        [SerializeField] [Range(0, 1000)] public int detectInterval = 200;
+        [SerializeField] [Range(50, 1000)] public int detectInterval = 200;
 
-        //[Space] [SerializeField] public NoiseFilteringSettings noiseFiltering;
-        //[Space] [SerializeField] public StabilitySettings stability;
+        [Tooltip("Higher values will help weaker image targets to get detected, but decreases fps")]
+        [SerializeField] [Range(0.4f, 1)] public float detectability = 0.5f;
+
+        public enum DetectZone {WIDE, NARROW};
+        [Tooltip("WIDE - Recommended for strong targets, focuses detection on large image details\n\nNARROW - Recommended for weaker targets or when using a small frameSize(eg. 300px), focuses detection on small image details")]
+        [SerializeField] public DetectZone detectZone = DetectZone.WIDE;
     }
 
-    /*[System.Serializable]
-    public class NoiseFilteringSettings
-    {
-        [Tooltip("Higer values are less prone to noise, but induces \"floatiness\"")]
-        [SerializeField] [Range(.001f, 0.1f)] public float smoothingThresholdPos = .001f;
-        [Tooltip("Higer values are less prone to noise, but induces \"floatiness\"")]
-        [SerializeField] [Range(.001f, 0.1f)] public float smoothingThresholdRot = .001f;
-        [Tooltip("Higer values are less prone to noise, but induces \"staircase clipping\"")]
-        [SerializeField] [Range(.05f, 2f)]    public float smoothingStrengthPos  = .15f;
-        [Tooltip("Higer values are less prone to noise, but induces \"staircase clipping\"")]
-        [SerializeField] [Range(.05f, 2f)]    public float smoothingStrengthRot  = .15f;
-    }
-
-    [System.Serializable]
-    public class StabilitySettings
-    {
-        [Tooltip("Lower values are more stable to motion, but induces noise")]
-        [SerializeField] [Range(.001f, 0.1f)] public float stabilityThresholdPos = .1f;
-        [Tooltip("Lower values are more stable to motion, but induces noise")]
-        [SerializeField] [Range(.001f, 0.1f)] public float stabilityThresholdRot = .1f;
-    }*/
 
     //[CreateAssetMenu(menuName = "Imagine WebAR/Image Tracker Global Settings", order = 1300)]
     public class ImageTrackerGlobalSettings : ScriptableObject
     {
         [SerializeField] public List<ImageTargetInfo> imageTargetInfos;
 
-        [SerializeField] public TrackerSettings defaultTrackerSettings;
+        [SerializeField] public List<TrackerSettingsTemplateSO> settingsTemplates;
         
         
         private static ImageTrackerGlobalSettings _instance;
@@ -128,15 +114,5 @@ namespace Imagine.WebAR{
             }
         }
     }
-
-    public static class FloatExtensions
-    {
-        //this is needed to properly convert floating point strings for some languages to JSON
-        public static string ToStringInvariantCulture(this float f)
-        {
-            return f.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        }
-    }
-
 }
 

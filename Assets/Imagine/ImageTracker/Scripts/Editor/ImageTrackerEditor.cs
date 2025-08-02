@@ -22,23 +22,72 @@ namespace Imagine.WebAR.Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("imageTargets"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("trackerOrigin"));
             EditorGUILayout.Space(20);
-            var overrideTrackerSettingsProp = serializedObject.FindProperty("overrideTrackerSettings");
-            EditorGUILayout.PropertyField(overrideTrackerSettingsProp);
+            // var overrideTrackerSettingsProp = serializedObject.FindProperty("overrideTrackerSettings");
+            // EditorGUILayout.PropertyField(overrideTrackerSettingsProp);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            var overrideTrackerSettingsPropVal = overrideTrackerSettingsProp.boolValue;
-            if (!overrideTrackerSettingsPropVal)
-            {
-                GUI.enabled = false;
-            }
+            // var overrideTrackerSettingsPropVal = overrideTrackerSettingsProp.boolValue;
+            // if (!overrideTrackerSettingsPropVal)
+            // {
+            //     GUI.enabled = false;
+            // }
             EditorGUI.indentLevel++;
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("trackerSettings"), true);
+            var trackerSettingsProp = serializedObject.FindProperty("trackerSettings");
+            EditorGUILayout.PropertyField(trackerSettingsProp, true);
+            
+            // //smoothing
+            // EditorGUILayout.Space(20);
+            // var useExtraSmoothingProp = trackerSettingsProp.FindPropertyRelative("useExtraSmoothing");
+            // EditorGUILayout.PropertyField(useExtraSmoothingProp);
+            // if(useExtraSmoothingProp.boolValue){
+            //     EditorGUI.indentLevel++;
+            //     EditorGUILayout.PropertyField(trackerSettingsProp.FindPropertyRelative("smoothenFactor"));
+            //     EditorGUI.indentLevel--;
+            // }
+
             EditorGUI.indentLevel--;
+            EditorGUILayout.Space(20);
+
+            //settings templates
+            EditorGUILayout.LabelField("Auto-set from the following templates", EditorStyles.boldLabel);
+            var templates = ImageTrackerGlobalSettings.Instance.settingsTemplates;
+            foreach(var t in templates){
+                GUI.color = t.color;
+                if(GUILayout.Button(new GUIContent(t.label, t.description))){
+                    if(EditorUtility.DisplayDialog(
+                        "Confirm settings overwrite",
+                        "Are you sure you want to set your tracker settings to " + t.label + "?\n\n" + 
+                        t.description + "\n\n" +
+                        "This will overwrite your current tracker settings"
+                    , "Proceed", "Cancel")){
+                        
+                        var tso = new SerializedObject(t);
+                        var tSettingsProp = tso.FindProperty("settings");//.FindPropertyRelative("advancedSettings");
+                        CopyTrackerSettings(
+                            tSettingsProp,
+                            trackerSettingsProp);
+
+                        EditorUtility.DisplayDialog("Copy Settings Finished", "Your tracker settings set to " + t.label, "Okay");
+
+                    }
+                }
+            }
+            GUI.color = Color.white;
+
             GUI.enabled = true;
             EditorGUILayout.EndVertical();
+            EditorGUILayout.Space(20);
+
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("dontDeactivateOnLost"));
+            
+            
+
             EditorGUILayout.Space(20);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("OnImageFound"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("OnImageLost"));
 
+            EditorGUILayout.Space(20);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("startStopOnEnableDisable"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("stopOnDestroy"));
 
             DrawEditorDebugger(); 
 
@@ -121,6 +170,69 @@ namespace Imagine.WebAR.Editor
             }    
 
             EditorGUILayout.EndVertical();
+        }
+
+        public void CopyTrackerSettings(SerializedProperty srcProp, SerializedProperty dstProp)
+        {
+            SerializedProperty currentProperty = srcProp.Copy();
+            SerializedProperty nextSiblingProperty = srcProp.Copy();
+            {
+                nextSiblingProperty.Next(false);
+            }
+        
+            if (currentProperty.Next(true))
+            {
+                do
+                {
+                    if (SerializedProperty.EqualContents(currentProperty, nextSiblingProperty))
+                        break;
+
+                    Debug.Log("Copying " + currentProperty.name + " (" + currentProperty.propertyType + ")");
+                    var dstChildProp = dstProp.FindPropertyRelative(currentProperty.name);
+
+                    if(currentProperty.hasChildren){
+                        CopyTrackerSettings(currentProperty, dstChildProp);
+                    }
+                    else{
+                        if(currentProperty.propertyType == SerializedPropertyType.Integer || 
+                            currentProperty.propertyType == SerializedPropertyType.Enum){
+                            dstChildProp.intValue = currentProperty.intValue;
+                        }
+                        else if(currentProperty.propertyType == SerializedPropertyType.Boolean){
+                            dstChildProp.boolValue = currentProperty.boolValue;
+                        }
+                        else if(currentProperty.propertyType == SerializedPropertyType.Float){
+                            dstChildProp.floatValue = currentProperty.floatValue;
+                        }
+                        else if(currentProperty.propertyType == SerializedPropertyType.String){
+                            dstChildProp.stringValue = currentProperty.stringValue;
+                        }
+                        else{
+                            Debug.LogError("Failed to copy property: " + currentProperty.name + "(" + currentProperty.propertyType + ")");
+                        }
+                    }
+
+                }
+                while (currentProperty.Next(false));
+            }
+        }
+
+        object GetValue(SerializedProperty property)
+        {
+            switch (property.propertyType)
+            {
+                case SerializedPropertyType.Integer:
+                    return property.intValue;
+                case SerializedPropertyType.Boolean:
+                    return property.boolValue;
+                case SerializedPropertyType.Float:
+                    return property.floatValue;
+                case SerializedPropertyType.String:
+                    return property.stringValue;
+                // Add more cases as needed for other property types
+                default:
+                    return null;
+            }
         }
 
     }
