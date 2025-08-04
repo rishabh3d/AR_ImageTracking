@@ -26,6 +26,7 @@ namespace Imagine.WebAR.Editor
                 var src = AssetDatabase.GetAssetPath(info.texture);
                 var fileName = Path.GetFileName(src);
                 Debug.Log(info.id + "->" + src);
+                Debug.Log(fileName + "->" + src);
 
                 File.Copy(src, buildPath + "/targets/" + fileName, true);
 

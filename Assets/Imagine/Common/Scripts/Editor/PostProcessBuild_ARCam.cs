@@ -25,9 +25,9 @@ namespace Imagine.WebAR.Editor
             else if(facingMode == ARCameraGlobalSettings.FacingMode.FRONT){
                 htmlLines = ReplaceFacingMode(htmlLines, "user");
             }
-            // else if(facingMode == ARCameraGlobalSettings.FacingMode.BACK_AND_FRONT){
+           /* // else if(facingMode == ARCameraGlobalSettings.FacingMode.BACK_AND_FRONT){
             //     htmlLines = ReplaceFacingMode(htmlLines, "");
-            // }
+            // }*/
 
             File.WriteAllLines(buildPath + "/index.html", htmlLines); 
         }
