@@ -1,0 +1,25 @@
+GitHub + GitHub Pages (for small files)
+Pros:
+
+Free
+
+Public
+
+Can be streamed via raw links
+
+Cons:
+
+GitHub has a 100MB file size limit per file.
+
+Not suitable for large videos.
+
+How to do it:
+
+Upload the video to a GitHub repository (under videos/ folder).
+
+Use jsDelivr CDN to serve it:
+
+https://cdn.jsdelivr.net/gh/USERNAME/REPO@branch/videos/your_video.mp4
+
+
+my URL that im using https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_Videos@main/videos/your_video.mp4
