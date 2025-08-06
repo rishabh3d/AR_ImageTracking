@@ -357,6 +357,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3859097454293603071, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: ec3b724d810a54948bb59bbd66e41136, type: 2}
     - target: {fileID: 4340624013304174179, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -367,7 +371,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4920612201668616695, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4920612201668616695, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1267,7 +1271,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: e8d8a4670d297406089897a997b042c9, type: 2}
     - target: {fileID: 7318624405149044552, guid: 8ba8650da5cfe45208323345e885eac4, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7318624405149044552, guid: 8ba8650da5cfe45208323345e885eac4, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1431,7 +1435,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   videoPlaneMode: 0
   videoPlaneMat: {fileID: 2100000, guid: 9bf2a20737d8843d1acf6d8a37df9742, type: 2}
-  videoDistance: 1000
+  videoDistance: 100
   OnResized:
     m_PersistentCalls:
       m_Calls: []
@@ -1634,8 +1638,8 @@ MonoBehaviour:
   trackerOrigin: 0
   trackedIds: []
   trackerSettings:
-    maxSimultaneousTargets: 2
-    targetFrameRate: -1
+    maxSimultaneousTargets: 1
+    targetFrameRate: 30
     advancedSettings:
       maxFrameLength: 500
       maxFrameArea: 80
