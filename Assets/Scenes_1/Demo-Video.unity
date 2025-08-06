@@ -1422,17 +1422,17 @@ MonoBehaviour:
   trackedIds: []
   trackerSettings:
     maxSimultaneousTargets: 1
-    targetFrameRate: 30
+    targetFrameRate: -1
     advancedSettings:
       maxFrameLength: 500
       maxFrameArea: 80
       trackedPoints: 80
-      poseCorrectionInterval: 200
+      poseCorrectionInterval: 1500
       detectInterval: 200
       detectability: 0.5
       detectZone: 0
-    useExtraSmoothing: 1
-    smoothenFactor: 15
+    useExtraSmoothing: 0
+    smoothenFactor: 10
     debugMode: 0
   dontDeactivateOnLost: 0
   OnImageFound:
