@@ -6,8 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes_1/Demo-Main.unity
-    guid: 44535b5673ca54ef096c6b8d79cf73ef
+    path: Assets/Imagine/ImageTracker/Demos/Scenes/Demo-Main.unity
+    guid: 640ba54b742624e088e49652c9c522f2
   - enabled: 1
     path: Assets/Scenes_1/Demo-Video.unity
     guid: 41fb97b8f3b9d4b7ea1805bebc156e66
