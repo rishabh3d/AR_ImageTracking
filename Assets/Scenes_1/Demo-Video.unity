@@ -371,15 +371,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4920612201668616695, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.9
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 4920612201668616695, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.9
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 4920612201668616695, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.9
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 4920612201668616695, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1653,9 +1653,9 @@ MonoBehaviour:
     maxSimultaneousTargets: 1
     targetFrameRate: 30
     advancedSettings:
-      maxFrameLength: 500
+      maxFrameLength: 450
       maxFrameArea: 80
-      trackedPoints: 80
+      trackedPoints: 60
       poseCorrectionInterval: 1500
       detectInterval: 200
       detectability: 0.5
