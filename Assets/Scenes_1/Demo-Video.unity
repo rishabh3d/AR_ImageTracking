@@ -360,7 +360,7 @@ PrefabInstance:
     - target: {fileID: 4340624013304174179, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58e7c22fac5d4328b4fc06006aa13e6, type: 2}
+      objectReference: {fileID: 2100000, guid: 265fa338aaacd41758d848302bf18aca, type: 2}
     - target: {fileID: 4920612201668616695, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -458,7 +458,7 @@ VideoPlayer:
   - {fileID: 0}
   m_DirectAudioVolumes:
   - 1
-  m_Url: https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_ImageTracking@main/videos/Bjp%20Speech%20For%20Ar.mp4
+  m_Url: https://firebasestorage.googleapis.com/v0/b/imagine-realities-website.appspot.com/o/videos%2Frmn.mp4?alt=media
   m_EnabledAudioTracks: 00
   m_DirectAudioMutes: 00
   m_ControlledAudioTrackCount: 1
@@ -1260,10 +1260,10 @@ PrefabInstance:
     - target: {fileID: 3850591917385750171, guid: 8ba8650da5cfe45208323345e885eac4, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58e7c22fac5d4328b4fc06006aa13e6, type: 2}
+      objectReference: {fileID: 2100000, guid: e8d8a4670d297406089897a997b042c9, type: 2}
     - target: {fileID: 7318624405149044552, guid: 8ba8650da5cfe45208323345e885eac4, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7318624405149044552, guid: 8ba8650da5cfe45208323345e885eac4, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1427,7 +1427,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   videoPlaneMode: 0
   videoPlaneMat: {fileID: 2100000, guid: 9bf2a20737d8843d1acf6d8a37df9742, type: 2}
-  videoDistance: 100
+  videoDistance: 1000
   OnResized:
     m_PersistentCalls:
       m_Calls: []
@@ -2639,7 +2639,7 @@ PrefabInstance:
     - target: {fileID: 4340624013304174179, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58e7c22fac5d4328b4fc06006aa13e6, type: 2}
+      objectReference: {fileID: 2100000, guid: c39909d4e5c0f4999bf4ca49973f59e3, type: 2}
     - target: {fileID: 4920612201668616695, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -2844,7 +2844,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4920612201668616695, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4920612201668616695, guid: 37d51c6aec22d41448ed936a421e4d14, type: 3}
       propertyPath: m_LocalPosition.x
