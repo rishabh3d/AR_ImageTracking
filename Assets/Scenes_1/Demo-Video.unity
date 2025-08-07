@@ -227,7 +227,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &141110260
 RectTransform:
   m_ObjectHideFlags: 0
@@ -244,8 +244,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 306, y: -897.863}
-  m_SizeDelta: {x: 512, y: 287}
+  m_AnchoredPosition: {x: 306, y: -1074.363}
+  m_SizeDelta: {x: 360, y: 640}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &141110261
 MonoBehaviour:
@@ -296,7 +296,7 @@ MonoBehaviour:
         m_MethodName: DownloadTexture
         m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 2800000, guid: e7fd3cb830773404693d049b4e6582a8, type: 3}
+          m_ObjectArgument: {fileID: 2800000, guid: 43b6876aa4db14f5099cfe90e175dc12, type: 3}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Texture2D, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
@@ -323,9 +323,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e7fd3cb830773404693d049b4e6582a8, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 43b6876aa4db14f5099cfe90e175dc12, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -1727,7 +1727,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -90, y: -90}
-  m_SizeDelta: {x: 612, y: 954.363}
+  m_SizeDelta: {x: 612, y: 2206.363}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1130425851
 MonoBehaviour:
@@ -1856,7 +1856,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 50, y: -754.363}
+  m_AnchoredPosition: {x: 50, y: -2006.363}
   m_SizeDelta: {x: 512, y: 150}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1244044824
@@ -2107,7 +2107,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1302119850
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2124,7 +2124,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 306, y: -1110}
+  m_AnchoredPosition: {x: 306, y: -1700.363}
   m_SizeDelta: {x: 384, y: 512}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1302119851
