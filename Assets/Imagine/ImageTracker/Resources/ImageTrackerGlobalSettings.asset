@@ -19,6 +19,8 @@ MonoBehaviour:
     texture: {fileID: 2800000, guid: 6a9fe2192cd58ad4c903dcdff19c3678, type: 3}
   - id: rmn
     texture: {fileID: 2800000, guid: 43b6876aa4db14f5099cfe90e175dc12, type: 3}
+  - id: WeddingInvitation
+    texture: {fileID: 2800000, guid: c2a503b81bc3d43c8ab76fd17d38a982, type: 3}
   settingsTemplates:
   - {fileID: 11400000, guid: 35c99cc7b662a46eb89cc7a32e239494, type: 2}
   - {fileID: 11400000, guid: 9cf415d375f91458483df57436950575, type: 2}
