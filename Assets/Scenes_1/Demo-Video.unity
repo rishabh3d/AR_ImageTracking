@@ -1010,9 +1010,9 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7565436024393578079}
-  - {fileID: 1017086193308914686}
   - {fileID: 915753447}
   - {fileID: 6718959710221669450}
+  - {fileID: 1017086193308914686}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1088328896
@@ -1041,7 +1041,7 @@ MonoBehaviour:
     transform: {fileID: 6718959710221669450}
     targetPos: {x: 0, y: 0, z: 0}
     targetRot: {x: 0, y: 0, z: 0, w: 0}
-  - id: WeddingInvitation
+  - id: weddingInvitation
     transform: {fileID: 1017086193308914686}
     targetPos: {x: 0, y: 0, z: 0}
     targetRot: {x: 0, y: 0, z: 0, w: 0}
@@ -1546,7 +1546,7 @@ Transform:
   m_GameObject: {fileID: 4688700628744175024}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1, y: 0, z: 0}
+  m_LocalPosition: {x: 3, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1886,7 +1886,7 @@ GameObject:
   - component: {fileID: 9212861303415120118}
   - component: {fileID: 8532090049755243626}
   m_Layer: 0
-  m_Name: WeddingInvitation
+  m_Name: weddingInvitation
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1930,7 +1930,7 @@ GameObject:
   - component: {fileID: 8333431812367346442}
   - component: {fileID: 8796926651407937431}
   m_Layer: 0
-  m_Name: WeddingInvitation vid
+  m_Name: weddingInvitation vid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2461,7 +2461,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3a6ab5e3593a04246bf07686a0f1098e, type: 2}
+  - {fileID: 2100000, guid: 9c59caab92e1e44e0b677d599ea8bb6d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
