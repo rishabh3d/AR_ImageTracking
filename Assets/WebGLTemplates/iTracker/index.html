@@ -39,7 +39,7 @@
     <video id="webcam-video" muted autoplay playsinline style="width:1px;position:absolute"></video>
     <!-- <video id="webcam-video" muted autoplay playsinline style="width:100%; height:100%; object-fit:cover; position:absolute"></video> -->
     <canvas id="video-canvas" style="width:100%; height:100%; object-fit:cover; position:absolute"></canvas>
-    <div id="startARDiv" class="ctaDiv">
+    <div id="startARDiv" class="ctaDiv" style="display: none;">
         <select id="chooseCamSel" style="display: none;" onchange="SelectCam()"></select>
         <p style="text-align: center; width:60vw;">This augmented reality experience requires access to your device's camera</p>
         <button id="startARButton" onclick="StartAR()" style="display:none">ALLOW ACCESS</button>
@@ -92,7 +92,7 @@
                 }
                 
                 await LoadWebcams();
-                document.getElementById("startARButton").style.display = "block";
+                StartAR(); // Automatically called instead of waiting for user click
             }
 
             initialize();
