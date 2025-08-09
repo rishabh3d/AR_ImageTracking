@@ -26,4 +26,6 @@ my URL that im using https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_Videos@mai
 
 https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_ImageTracking@main/videos/FINAL_RENDER%20STORY%202.mp4
 
+https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_ImageTracking@main/videos/Shoes_GreenScreen.mp4
+
 https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_ImageTracking@main/videos/Wedding%20Invitation%20Video.mp4
