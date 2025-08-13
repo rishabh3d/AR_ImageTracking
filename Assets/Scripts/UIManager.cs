@@ -8,6 +8,10 @@ public class UIManager : MonoBehaviour
 
     public Button contectButton;
 
+    public GameObject firstCanvas;
+    public Button startButton;
+    public Button backButton;
+
     // Start is called before the first frame update
     void Start()
     {
