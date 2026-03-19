@@ -266,6 +266,40 @@
                 //place global settings here
                 INTERNAL_SMOOTHFACTOR_POS: .075,
             }
+            // v1.8.2: iOS Audio Fix - Resume AudioContext on user touch
+            // iOS Safari requires a user gesture to start/resume audio playback.
+            // This intercepts all AudioContext creation and resumes them on first touch.
+            window._audioContexts = [];
+            var OrigAudioContext = window.AudioContext || window.webkitAudioContext;
+            if (OrigAudioContext) {
+                var origCreate = OrigAudioContext;
+                var patchedAudioContext = function() {
+                    var ctx = new origCreate();
+                    window._audioContexts.push(ctx);
+                    return ctx;
+                };
+                // Don't override if it breaks Unity - just track via resume handler
+            }
+            function resumeAllAudioContexts() {
+                // Resume Unity's internal audio context
+                if (typeof WEBAudio !== 'undefined' && WEBAudio.audioContext) {
+                    if (WEBAudio.audioContext.state === 'suspended') {
+                        WEBAudio.audioContext.resume();
+                        console.log('iOS: Resumed WEBAudio context');
+                    }
+                }
+                if (window._audioContexts) {
+                    window._audioContexts.forEach(function(ctx) {
+                        if (ctx.state === 'suspended') ctx.resume();
+                    });
+                }
+            }
+            // Listen for ANY user interaction to unlock audio
+            ['touchstart', 'touchend', 'click', 'mousedown'].forEach(function(eventName) {
+                document.addEventListener(eventName, function() {
+                    resumeAllAudioContexts();
+                }, { once: false, passive: true });
+            });
             
     </script>
 </body>
