@@ -68,7 +68,7 @@
         <p id="errorText" style="text-align: center; width:60vw; color:white"></p>
     </div>
     <div id="unity-container" class="unity-mobile">
-        <canvas id="unity-canvas" style="width: 100%; height: 100%; background: #0000; z-index: -99"></canvas>
+        <canvas id="unity-canvas" style="width: 100%; height: 100%; background: #0000; z-index: -99; touch-action: none;"></canvas>
         <div id="unity-loading-bar">
             <div id="unity-logo"></div>
             <div id="unity-progress-bar-empty">
@@ -90,7 +90,7 @@
                     await window.iTracker.initialize();
                     console.log("ImageTracker initialized!");
                 }
-                catch{
+                catch(error){
                     console.error("Failed to initialize ImageTracker. Are you missing opencv.js? " + error);
                     ShowError("Failed to initialize the experience.");
                     return;
