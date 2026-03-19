@@ -27,6 +27,7 @@ Shader "Imagine/ARShadowURP"
             //Blend DstColor Zero, Zero One
             Blend SrcAlpha OneMinusSrcAlpha
             Cull Back
+            ZWrite Off
             //ZTest LEqual
             //ZWrite Off
    
@@ -92,7 +93,10 @@ Shader "Imagine/ARShadowURP"
  
                 float4 shadowCoord = GetShadowCoord(vertexInput);
                 half shadowAttenutation = MainLightRealtimeShadow(shadowCoord);
-                return half4(0,0,0, (1-shadowAttenutation) * _ShadowIntensity);
+                half shadowAlpha = (1-shadowAttenutation) * _ShadowIntensity;
+                // v1.8.2: Clip very low alpha to avoid white outline artifacts
+                clip(shadowAlpha - 0.01);
+                return half4(0,0,0, shadowAlpha);
             }
  
             ENDHLSL

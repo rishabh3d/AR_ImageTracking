@@ -11,6 +11,11 @@ namespace Imagine.WebAR.Samples
         [SerializeField] AudioSource sound;
 
         public float lastPos = 0;
+        
+        // v1.8.0: Throttle sync corrections to prevent iOS audio stuttering
+        private float lastSyncTime = 0;
+        private const float SYNC_COOLDOWN = 0.5f; // Minimum time between sync corrections
+        private const float SYNC_THRESHOLD = 0.15f; // Drift threshold before correcting
 
         void Awake(){
             
@@ -47,15 +52,17 @@ namespace Imagine.WebAR.Samples
                 else if(!sound.isPlaying){
                     sound.time = (float)video.time;
                     sound.Play();
-
                 }
                     
 
-                if(Mathf.Abs(sound.time - (float)video.time) > 0.1){
-                    Debug.Log(sound.time + ", " + sound.clip.length);
-                    
-                    sound.time = (float)video.time;
-                    Debug.Log(sound.time + "=>" + video.time);
+                // v1.8.0: Throttled sync with cooldown to prevent iOS audio stuttering
+                if(Mathf.Abs(sound.time - (float)video.time) > SYNC_THRESHOLD){
+                    if(Time.unscaledTime - lastSyncTime > SYNC_COOLDOWN){
+                        Debug.Log(sound.time + ", " + sound.clip.length);
+                        sound.time = (float)video.time;
+                        Debug.Log(sound.time + "=>" + video.time);
+                        lastSyncTime = Time.unscaledTime;
+                    }
                 }
                
 

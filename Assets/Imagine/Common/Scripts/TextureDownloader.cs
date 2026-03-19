@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_WEBGL
 using System.Runtime.InteropServices;
+#endif
 
 using UnityEngine;
 
@@ -8,7 +10,9 @@ namespace Imagine.WebAR
 {
     public class TextureDownloader : MonoBehaviour
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] private static extern void DownloadWebGLTexture(byte[] img, int size, string filename, string extension);
+#endif
 
         private enum FileExtension { PNG, JPEG};
         [SerializeField] private FileExtension fileExt = FileExtension.PNG;

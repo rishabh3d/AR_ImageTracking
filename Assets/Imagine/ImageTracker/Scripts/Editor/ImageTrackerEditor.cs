@@ -91,6 +91,16 @@ namespace Imagine.WebAR.Editor
 
             DrawEditorDebugger(); 
 
+            // v1.8.0: Editor notification for testing
+            if(!Application.IsPlaying(_target))
+            {
+                EditorGUILayout.Space(10);
+                EditorGUILayout.HelpBox(
+                    "⚠️ Note: Image tracking only works in WebGL builds. " +
+                    "Use the Editor debugger below to simulate tracking in Play mode.", 
+                    MessageType.Info);
+            }
+
             serializedObject.ApplyModifiedProperties();
         }
 

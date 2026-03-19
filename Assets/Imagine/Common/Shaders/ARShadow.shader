@@ -14,6 +14,7 @@ SubShader
     {
         Tags {"LightMode" = "ForwardBase" }
         Cull Back
+        ZWrite Off
         Blend SrcAlpha OneMinusSrcAlpha
         CGPROGRAM
         #pragma vertex vert
@@ -40,7 +41,10 @@ SubShader
         fixed4 frag(v2f i) : COLOR
         {
             float attenuation = LIGHT_ATTENUATION(i);
-            return fixed4(0,0,0,(1-attenuation)*_ShadowIntensity);
+            fixed shadowAlpha = (1-attenuation)*_ShadowIntensity;
+            // v1.8.2: Clip very low alpha to avoid white outline artifacts
+            clip(shadowAlpha - 0.01);
+            return fixed4(0,0,0,shadowAlpha);
         }
         ENDCG
     }

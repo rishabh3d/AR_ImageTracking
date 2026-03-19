@@ -1,14 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_WEBGL
 using System.Runtime.InteropServices;
+#endif
 
 
 namespace Imagine.WebAR
 {
     public class ScreenshotManager : MonoBehaviour
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] private static extern void ShowWebGLScreenshot(string dataUrl);
+#endif
 
         private ARCamera arCamera;
 
@@ -19,7 +23,11 @@ namespace Imagine.WebAR
 
 
         void Start(){
+#if UNITY_2023_1_OR_NEWER
+            arCamera = GameObject.FindFirstObjectByType<ARCamera>();
+#else
             arCamera = GameObject.FindObjectOfType<ARCamera>();
+#endif
         }
 
 
@@ -60,7 +68,7 @@ namespace Imagine.WebAR
 
 #if UNITY_EDITOR
             Debug.Log("Screenshots are only displayed on WebGL builds");
-#else
+#elif UNITY_WEBGL
             byte[] textureBytes = screenShot.EncodeToJPG();
             string dataUrlStr = "data:image/jpeg;base64," + System.Convert.ToBase64String(textureBytes);
             ShowWebGLScreenshot(dataUrlStr);

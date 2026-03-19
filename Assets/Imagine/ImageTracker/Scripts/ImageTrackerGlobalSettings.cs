@@ -99,6 +99,11 @@ namespace Imagine.WebAR{
 
         [SerializeField] public List<TrackerSettingsTemplateSO> settingsTemplates;
         
+        // v1.8.0: Remote opencv.js support
+        [Tooltip("If enabled, opencv.js will be loaded from the specified remote URL instead of the local file")]
+        [SerializeField] public bool useRemoteOpenCV = false;
+        [Tooltip("Remote URL for opencv.js (e.g., a CDN URL). Only used when 'Use Remote OpenCV' is enabled.")]
+        [SerializeField] public string remoteOpenCVUrl = "https://docs.opencv.org/4.7.0/opencv.js";
         
         private static ImageTrackerGlobalSettings _instance;
         public static ImageTrackerGlobalSettings Instance

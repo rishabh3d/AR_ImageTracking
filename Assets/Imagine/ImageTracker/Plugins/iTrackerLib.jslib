@@ -20,7 +20,7 @@ mergeInto(LibraryManager.library, {
     },
     SetWebGLiTrackerSettings: function(settings)
 	{
-    	window.iTracker.setTrackerSettings(UTF8ToString(settings), "1.7.1.429689");
+    	window.iTracker.setTrackerSettings(UTF8ToString(settings), "1.8.2");
     },
     DebugImageTarget: function(id)
     {
@@ -44,7 +44,7 @@ mergeInto(LibraryManager.library, {
         GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_WRAP_S, GLctx.CLAMP_TO_EDGE);
         GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_WRAP_T, GLctx.CLAMP_TO_EDGE);
         GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_MIN_FILTER, GLctx.LINEAR);
-        GLctx.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); 
+        GLctx.pixelStorei(GLctx.UNPACK_FLIP_Y_WEBGL, true); 
         GLctx.texSubImage2D(GLctx.TEXTURE_2D, 0, 0, 0, GLctx.RGBA, GLctx.UNSIGNED_BYTE, textureCanvas);
         GLctx.pixelStorei(GLctx.UNPACK_FLIP_Y_WEBGL, false);
 

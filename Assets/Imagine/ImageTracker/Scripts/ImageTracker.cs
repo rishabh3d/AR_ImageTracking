@@ -6,7 +6,9 @@ using UnityEngine.Events;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 #endif
+#if UNITY_WEBGL
 using System.Runtime.InteropServices;
+#endif
 
 
 namespace Imagine.WebAR
@@ -22,12 +24,14 @@ namespace Imagine.WebAR
 
     public class ImageTracker : MonoBehaviour
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] private static extern void StartWebGLiTracker(string ids, string name);
         [DllImport("__Internal")] private static extern void StopWebGLiTracker();
         [DllImport("__Internal")] private static extern float SetWebGLiTrackerSettings(string settings);
         [DllImport("__Internal")] private static extern bool IsWebGLiTrackerReady();
         [DllImport("__Internal")] private static extern float DebugImageTarget(string id);
         [DllImport("__Internal")] private static extern bool IsWebGLImageTracked(string id);
+#endif
         
 
         [SerializeField] private ARCamera trackerCam;
@@ -63,6 +67,11 @@ namespace Imagine.WebAR
         private Vector3 flippedScale = new Vector3(-1, 1, 1);
         private Quaternion rot;
 
+        // v1.8.0+ Improved multi-target tracking - additional smoothing
+        private Dictionary<string, Vector3> prevPositions = new Dictionary<string, Vector3>();
+        private Dictionary<string, Quaternion> prevRotations = new Dictionary<string, Quaternion>();
+        [SerializeField] [Range(0.01f, 1f)] private float multiTargetSmoothFactor = 0.15f;
+
 
         IEnumerator Start()
         {
@@ -73,7 +82,11 @@ namespace Imagine.WebAR
 
             if(trackerCam == null)
             {
+#if UNITY_2023_1_OR_NEWER
+                trackerCam = GameObject.FindFirstObjectByType<ARCamera>();
+#else
                 trackerCam = GameObject.FindObjectOfType<ARCamera>();
+#endif
             }
 
             foreach (var i in imageTargets)
@@ -164,7 +177,11 @@ namespace Imagine.WebAR
 
         public bool IsImageTracked(string id)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
             return IsWebGLImageTracked(id);
+#else
+            return trackedIds.Contains(id);
+#endif
         }
 
         void OnTrackingFound(string id)
@@ -245,13 +262,25 @@ namespace Imagine.WebAR
 
             if (trackerOrigin == TrackerOrigin.CAMERA_ORIGIN)
             {
+                var newPos = trackerCam.transform.TransformPoint(pos);
+                var newRot = trackerCam.transform.rotation * rot;
+
+                // v1.8.2: Apply inter-frame smoothing for multi-target jitter reduction
+                if (trackedIds.Count > 1 && prevPositions.ContainsKey(id))
+                {
+                    newPos = Vector3.Lerp(prevPositions[id], newPos, multiTargetSmoothFactor);
+                    newRot = Quaternion.Slerp(prevRotations[id], newRot, multiTargetSmoothFactor);
+                }
+                prevPositions[id] = newPos;
+                prevRotations[id] = newRot;
+
                 if(!trackerSettings.useExtraSmoothing){
-                    target.position = trackerCam.transform.TransformPoint(pos);
-                    target.rotation = trackerCam.transform.rotation * rot;
+                    target.position = newPos;
+                    target.rotation = newRot;
                 }
                 else{
-                    targets[id].targetPos = trackerCam.transform.TransformPoint(pos);
-                    targets[id].targetRot = trackerCam.transform.rotation * rot;
+                    targets[id].targetPos = newPos;
+                    targets[id].targetRot = newRot;
                 }
                 
             }
@@ -279,9 +308,21 @@ namespace Imagine.WebAR
                 else
                 {
                     //succeeding targets relative to camera
+                    var newPos = trackerCam.transform.TransformPoint(pos);
+                    var newRot = trackerCam.transform.rotation * rot;
+
+                    // v1.8.2: Apply inter-frame smoothing for multi-target jitter reduction
+                    if (trackedIds.Count > 1 && prevPositions.ContainsKey(id))
+                    {
+                        newPos = Vector3.Lerp(prevPositions[id], newPos, multiTargetSmoothFactor);
+                        newRot = Quaternion.Slerp(prevRotations[id], newRot, multiTargetSmoothFactor);
+                    }
+                    prevPositions[id] = newPos;
+                    prevRotations[id] = newRot;
+
                     if(!trackerSettings.useExtraSmoothing){
-                        target.position = trackerCam.transform.TransformPoint(pos);
-                        target.rotation = trackerCam.transform.rotation * rot;
+                        target.position = newPos;
+                        target.rotation = newRot;
                     }
                     else{
                         targets[id].targetPos = dummyCamTransform.TransformPoint(pos);
@@ -317,11 +358,15 @@ namespace Imagine.WebAR
                     if(debugImageTargetIndex >= imageTargets.Count)
                     {
                         debugImageTargetIndex = 0;
+#if UNITY_WEBGL && !UNITY_EDITOR
                         DebugImageTarget("");
+#endif
                     }
                     else
                     {
+#if UNITY_WEBGL && !UNITY_EDITOR
                         DebugImageTarget(imageTargets[debugImageTargetIndex].id);
+#endif
                         debugImageTargetIndex++;
                     }
                 }

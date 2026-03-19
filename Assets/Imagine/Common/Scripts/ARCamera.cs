@@ -2,7 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+#if UNITY_WEBGL
 using System.Runtime.InteropServices;
+#endif
 
 #if IMAGINE_URP
 using UnityEngine.Rendering;
@@ -14,6 +16,7 @@ namespace Imagine.WebAR
     [RequireComponent(typeof(Camera))]
     public class ARCamera : MonoBehaviour
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] private static extern void SetWebGLARCameraSettings(string settings);
         [DllImport("__Internal")] private static extern void WebGLStartCamera();
         [DllImport("__Internal")] private static extern bool WebGLIsCameraStarted();
@@ -25,6 +28,7 @@ namespace Imagine.WebAR
         [DllImport("__Internal")] private static extern bool IsWebcamPermissionGranted();
         [DllImport("__Internal")] private static extern void WebGLFlipCamera();
         [DllImport("__Internal")] private static extern bool WebGLIsCameraFlipped();
+#endif
 
          public enum VideoPlaneMode {
             NONE,
@@ -62,6 +66,8 @@ namespace Imagine.WebAR
         private void Awake()
         {
             cam = GetComponent<Camera>();
+            // v1.8.0: Set transparent background immediately to avoid white flash on startup/resize
+            cam.backgroundColor = new Color(0, 0, 0, 0);
         }
 
         private IEnumerator Start()
@@ -252,7 +258,9 @@ namespace Imagine.WebAR
         }
 
         void SetVideoDims(){
+#if UNITY_WEBGL && !UNITY_EDITOR
             Resize( WebGLGetVideoDims());
+#endif
         }
 
         // public void DebugDrawDataUrl(string dataUrl, int width, int height){
@@ -321,6 +329,26 @@ namespace Imagine.WebAR
             orientation = message == "PORTRAIT" ? ARCameraOrientation.PORTRAIT : ARCameraOrientation.LANDSCAPE;
             OnCameraOrientationChanged?.Invoke(orientation);
         }
+
+#if UNITY_EDITOR
+        // v1.8.2: ARCamera scene gizmo
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.5f);
+            Gizmos.matrix = transform.localToWorldMatrix;
+            Gizmos.DrawFrustum(Vector3.zero, cam != null ? cam.fieldOfView : 60f, 5f, 0.1f, cam != null ? cam.aspect : 1.78f);
+            Gizmos.color = new Color(0.2f, 0.8f, 1f, 1f);
+            Gizmos.DrawWireCube(Vector3.zero, new Vector3(0.3f, 0.2f, 0.05f));
+            
+            // Draw camera direction indicator
+            Gizmos.color = Color.blue;
+            Gizmos.DrawRay(Vector3.zero, Vector3.forward * 1.5f);
+            Gizmos.color = Color.green;
+            Gizmos.DrawRay(Vector3.zero, Vector3.up * 0.5f);
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(Vector3.zero, Vector3.right * 0.5f);
+        }
+#endif
     }
 }
 

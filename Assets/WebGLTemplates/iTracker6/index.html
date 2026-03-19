@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content='width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=yes'>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Unity WebGL Player | {{{ PRODUCT_NAME }}}</title>
     <link rel="stylesheet" href="TemplateData/style.css">
+    <!-- v1.8.0: PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
 
     <style>
         html{
@@ -17,6 +22,8 @@
             min-height: -webkit-fill-available;
             width: 100vw;
             overflow: hidden;
+            /* v1.8.0: Fix white flicker */
+            background-color: #000;
         }
         .ctaDiv {
             display: flex;
@@ -31,13 +38,50 @@
             background: #fffa;
             z-index: 99;
         }
+        /* v1.8.2: Loading wheel spinner */
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            color: white;
+            margin-top: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <!--IMAGETARGETS-->
 
+    <!-- v1.8.2: Loading wheel shown while initializing -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+        <div class="loading-text">Initializing AR...</div>
+    </div>
+
     <video id="webcam-video" muted autoplay playsinline style="width:1px;position:absolute"></video>
-    <!-- <video id="webcam-video" muted autoplay playsinline style="width:100%; height:100%; object-fit:cover; position:absolute"></video> -->
     <canvas id="video-canvas" style="width:100%; height:100%; object-fit:cover; position:absolute"></canvas>
     <div id="startARDiv" class="ctaDiv" style="display: none;">
         <select id="chooseCamSel" style="display: none;" onchange="SelectCam()"></select>
@@ -63,6 +107,7 @@
         <p id="errorText" style="text-align: center; width:60vw; color:white"></p>
     </div>
     <div id="unity-container" class="unity-mobile">
+        <!-- v1.8.2: Prevent center tap reload by adding touch-action CSS -->
         <canvas id="unity-canvas" style="width: 100%; height: 100%; background: #0000; z-index: -99; touch-action: none;"></canvas>
         <div id="unity-loading-bar">
             <div id="unity-logo"></div>
@@ -86,8 +131,10 @@
                     console.log("ImageTracker initialized!");
                 }
                 catch(error){
+                    // v1.8.2: Proper error variable reference
                     console.error("Failed to initialize ImageTracker. Are you missing opencv.js? " + error);
                     ShowError("Failed to initialize the experience.");
+                    HideLoadingSpinner();
                     return;
                 }
                 
@@ -101,6 +148,12 @@
             var canvas = document.querySelector("#unity-canvas");
             var loadingBar = document.querySelector("#unity-loading-bar");
             var progressBarFull = document.querySelector("#unity-progress-bar-full");
+
+            // v1.8.2: Prevent default touch behavior that causes reload on center tap
+            canvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+
             function StartAR() {
                 canvas.style.width = window.innerWidth + "px";
                 canvas.style.height = window.innerHeight + "px";
@@ -123,20 +176,32 @@
                     productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
                     productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
                     //webglContextAttributes: { "preserveDrawingBuffer": true },
-                    // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-                    // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
+                    // matchWebGLToCanvasSize: false,
+                    // devicePixelRatio: 1,
                     },
                     (progress) => {
                         progressBarFull.style.width = 100 * progress + "%";
+                        // v1.8.2: Update loading spinner text with progress
+                        var loadingText = document.querySelector('.loading-text');
+                        if(loadingText) {
+                            loadingText.textContent = 'Loading... ' + Math.round(progress * 100) + '%';
+                        }
                     }
                 ).then((unityInstance) => {
                     window.unityInstance = unityInstance;
                     RequestWebcam();
 
                     loadingBar.style.display = "none";
+                    HideLoadingSpinner();
                 });
                 loadingBar.style.display = "block";
             }
+
+            function HideLoadingSpinner() {
+                var spinner = document.getElementById('loadingSpinner');
+                if(spinner) spinner.style.display = 'none';
+            }
+
             //Set Facing Mode here ('environment', 'user', '')
             window.unityFacingMode = "environment";
 
@@ -169,7 +234,7 @@
                 while (window.requestingForPermissions) {
                     // Wait until requestingForPermissions becomes true.
                     console.log("Waiting for permissions...");
-                    await new Promise(resolve => setTimeout(resolve, 100)); // Adjust the delay time as needed.
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
 
                 console.log("Got Permissions");
@@ -196,7 +261,6 @@
             }
             async function LoadWebcams(){
                 let camDevices = [];
-                // let backCams = [];
                 let devices = await navigator.mediaDevices.enumerateDevices();
                 var ctr = 0;
                 devices.forEach(mediaDevice => {
@@ -222,7 +286,6 @@
                 select.style.display = "block";
                 var count = 0;
                 //reverse array because some Android phones can't distinguish front and back cams at first load
-                //and when this happens, most of the time, front cam goes first and back cam goes last
                 camDevices = camDevices.reverse();
                 camDevices.forEach(mediaDevice => {
                     const option = document.createElement('option');
@@ -242,7 +305,6 @@
                 var select = document.getElementById("chooseCamSel");
                 window.deviceId = select.value;
                 window.WEBCAM_SETTINGS.video['deviceId'] = deviceId;
-                //console.log(window.WEBCAM_SETTINGS);
                 iTracker.WEBCAM_NAME = select.options[select.selectedIndex].innerHTML;
             }
 
@@ -269,6 +331,7 @@
             function ShowError(error){
                 document.getElementById("errorDiv").style.display = "flex";
                 document.getElementById("errorText").innerHTML = error;
+                HideLoadingSpinner();
             }
 
             function ShowScreenshot(dataUrl){
@@ -287,6 +350,17 @@
             window.ITRACKER_GLOBALS = {
                 //place global settings here
                 INTERNAL_SMOOTHFACTOR_POS: .075,
+            }
+
+            // v1.8.0: PWA Service Worker Registration
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('sw.js').then(function(registration) {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    }, function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+                });
             }
             
 
