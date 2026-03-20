@@ -7,8 +7,6 @@ on:
   push:
     branches:
       - main  # Set this to your default branch name (usually main or master)
-    paths:
-      - 'WebGLBuild/AR_Build/**' # Only trigger when the build folder changes
 
 permissions:
   contents: write # Important: Permission to write to the gh-pages branch
