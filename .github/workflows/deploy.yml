@@ -1,0 +1,28 @@
+# This GitHub Action will automatically deploy your WebGL build to the gh-pages branch
+# it will trigger every time you push changes to your build folder.
+
+name: Deploy WebGL Build to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Set this to your default branch name (usually main or master)
+    paths:
+      - 'WebGLBuild/AR_Build/**' # Only trigger when the build folder changes
+
+permissions:
+  contents: write # Important: Permission to write to the gh-pages branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages # This is the branch where the site will live
+          folder: WebGLBuild/AR_Build # The folder we want to deploy
+          clean: true # Automatically remove deleted files from the deploy branch
