@@ -8,6 +8,9 @@ on:
     branches:
       - main  # Set this to your default branch name (usually main or master)
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: write # Important: Permission to write to the gh-pages branch
 
