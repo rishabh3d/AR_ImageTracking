@@ -1255,7 +1255,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   trackerCam: {fileID: 963194229}
   imageTargets:
-  - id: flower
+  - id: VistingCard
     transform: {fileID: 2037037346850983495}
     targetPos: {x: 0, y: 0, z: 0}
     targetRot: {x: 0, y: 0, z: 0, w: 0}
@@ -1274,7 +1274,7 @@ MonoBehaviour:
       detectZone: 0
     useExtraSmoothing: 0
     smoothenFactor: 10
-    debugMode: 1
+    debugMode: 0
   dontDeactivateOnLost: 0
   OnImageFound:
     m_PersistentCalls:
