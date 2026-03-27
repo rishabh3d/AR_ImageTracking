@@ -1589,11 +1589,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 664520255115973757, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.8480481
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 664520255115973757, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.5299192
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 664520255115973757, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -1601,7 +1601,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 664520255115973757, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: -64
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1485539852058493281, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_StringArgument
