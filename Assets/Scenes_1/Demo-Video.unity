@@ -1587,6 +1587,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1088328895}
     m_Modifications:
+    - target: {fileID: 1485539852058493281, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_StringArgument
+      value: https://cdn.discordapp.com/attachments/1232742901847429263/1487138179474788352/ShantanuShrivastava.vcf?ex=69c80cdb&is=69c6bb5b&hm=315d99adf69bb9d1a4e9afda117e629153c4b9ffaea0abf02d0b1037bb3b3149&
+      objectReference: {fileID: 0}
     - target: {fileID: 4037393676067035903, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_Name
       value: VistingCard
@@ -1601,7 +1605,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7258572972526991533, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7258572972526991533, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_LocalRotation.w
