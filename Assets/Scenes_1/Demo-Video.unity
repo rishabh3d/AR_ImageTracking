@@ -899,7 +899,7 @@ MonoBehaviour:
     transform: {fileID: 8146855388980912793}
     targetPos: {x: 0, y: 0, z: 0}
     targetRot: {x: 0, y: 0, z: 0, w: 0}
-  - id: VistingCard
+  - id: Back
     transform: {fileID: 2060588671}
     targetPos: {x: 0, y: 0, z: 0}
     targetRot: {x: 0, y: 0, z: 0, w: 0}
@@ -1609,7 +1609,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4037393676067035903, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_Name
-      value: VistingCard
+      value: Back
       objectReference: {fileID: 0}
     - target: {fileID: 7015906668719102812, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_Camera
