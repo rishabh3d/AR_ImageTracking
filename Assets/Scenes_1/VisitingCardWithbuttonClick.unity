@@ -2342,10 +2342,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1088328895}
     m_Modifications:
+    - target: {fileID: 3934927845175111048, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: ef5a4130e58e64f1394c6859ccd9d0c9, type: 2}
     - target: {fileID: 4037393676067035903, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_Name
       value: VistingCard
       objectReference: {fileID: 0}
+    - target: {fileID: 6195808796866123972, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ba824c80f5e21470a89a26fc2145e6b8, type: 2}
     - target: {fileID: 7015906668719102812, guid: cd1408b8dbb05485b8cf7df82ba63230, type: 3}
       propertyPath: m_Camera
       value: 

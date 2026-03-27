@@ -8,10 +8,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes_1/Demo-Video.unity
     guid: 41fb97b8f3b9d4b7ea1805bebc156e66
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes_1/VisitingCardWithbuttonClick.unity
     guid: a7a09e75c079b415d8baabb01e180790
-  - enabled: 1
+  - enabled: 0
     path: Assets/Imagine/ImageTracker/Demos/Scenes/Demo-Video.unity
     guid: 6cca40fbfd1a74e16b59ea8889afdbc3
   m_configObjects: {}
