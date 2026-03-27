@@ -25,6 +25,8 @@ MonoBehaviour:
     texture: {fileID: 2800000, guid: 8dd5d9ab5683db44fa0c70ce2ba63494, type: 3}
   - id: Shoes
     texture: {fileID: 2800000, guid: aba25f718463f40caa47795087b8b0c5, type: 3}
+  - id: Back
+    texture: {fileID: 2800000, guid: e449ad314bde5465a8e9b120354bf7f9, type: 3}
   settingsTemplates:
   - {fileID: 11400000, guid: 35c99cc7b662a46eb89cc7a32e239494, type: 2}
   - {fileID: 11400000, guid: 9cf415d375f91458483df57436950575, type: 2}
@@ -32,3 +34,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7076d90bd1bc04ee3af02815db0dfee3, type: 2}
   - {fileID: 11400000, guid: 4c91993c0df8b45b38b50506a4c9b1aa, type: 2}
   - {fileID: 11400000, guid: 445b583e5873b49c2b6bec84c64d7c38, type: 2}
+  useRemoteOpenCV: 0
+  remoteOpenCVUrl: https://docs.opencv.org/4.7.0/opencv.js
