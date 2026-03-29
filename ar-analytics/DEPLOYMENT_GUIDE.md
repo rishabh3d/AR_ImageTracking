@@ -1,0 +1,170 @@
+# ✅ AR Analytics Platform — Deployment Guide
+
+## What Was Built
+
+A complete **self-hosted, multi-tenant analytics platform** for your WebAR business.
+
+### Files Created
+
+| Component | Files | Purpose |
+|-----------|-------|---------|
+| **Database** | `sql/schema.sql` | 6 tables: admins, clients, projects, sessions, events, daily_stats |
+| **PHP API** | `api/config.php`, `api/index.php` | Configuration & router |
+| **Helpers** | `api/helpers/Database.php`, `Auth.php`, `Response.php` | PDO wrapper, token auth, JSON responses |
+| **Controllers** | `api/controllers/track.php`, `auth.php`, `dashboard.php`, `admin.php` | Event collection, auth, dashboard data, admin CRUD |
+| **Tracker JS** | `tracker/ar-analytics.js` | Lightweight (~3KB) tracker embedded in AR builds |
+| **Client Dashboard** | `dashboard/index.html` | Beautiful dark-themed dashboard (matches your mockup!) |
+| **Admin Panel** | `admin/index.html` | Client & project management |
+| **Installer** | `install.php` | One-click database setup |
+| **Unity Bridge** | `Assets/Imagine/Common/Plugins/Analytics.jslib` | C# → JS analytics bridge |
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `Assets/Imagine/ImageTracker/Scripts/ImageTracker.cs` | Added `WebGLTrackImageFound/Lost` calls in `OnTrackingFound/Lost` |
+| `Assets/WebGLTemplates/iTracker/index.html` | Added tracker `<script>` tag |
+
+---
+
+## 🚀 Deployment Steps (Hostinger)
+
+### Step 1: Create MySQL Database
+Go to **Hostinger hPanel** → **Databases** → Create database `ar_analytics`
+
+### Step 2: Upload to Hostinger
+Upload the entire `ar-analytics/` folder to `public_html/ar-analytics/` via File Manager or FTP
+
+### Step 3: Update Config
+Edit `api/config.php` with your Hostinger database credentials:
+```php
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'your_db_name');
+define('DB_USER', 'your_db_user');
+define('DB_PASS', 'your_db_pass');
+define('APP_URL', 'https://yourdomain.com/ar-analytics');
+define('APP_SECRET', 'random_64_character_string_here');
+```
+
+### Step 4: Run Installer
+Visit `https://yourdomain.com/ar-analytics/install.php` → Set admin password → **Delete install.php after!**
+
+### Step 5: Create First Client
+1. Go to `yourdomain.com/ar-analytics/admin/`
+2. Login with admin credentials
+3. Click **+ Add Client** → fill details
+4. Click **+ Add Project** → select client → get API key
+
+### Step 6: Add to AR Builds
+Add this one line to your AR build's `index.html` (before other scripts):
+```html
+<script src="https://yourdomain.com/ar-analytics/tracker/ar-analytics.js" 
+        data-project="PASTE_API_KEY_HERE"></script>
+```
+
+### Step 7: Rebuild Unity WebGL
+The template is already updated. Just rebuild — the tracker tag is in the template.
+
+> **IMPORTANT:** For each new client, update the `data-project` attribute with their unique API key from the admin panel.
+
+---
+
+## What Gets Tracked Automatically
+
+### 📊 Auto-Detected (Zero Config)
+- Device Type (mobile/desktop/tablet)
+- Operating System (iOS/Android/Windows)
+- Browser (Chrome/Safari/Firefox)
+- Country & City (IP geolocation)
+- Language
+- Screen Size
+- Traffic Source & UTM params
+- Session Duration
+- New vs Returning Visitors
+- Peak Hours
+
+### 🎯 AR Events (Auto-Hooked)
+- `ar_session_start` — Webcam activated
+- `ar_image_found` — Target detected (with ID)
+- `ar_image_lost` — Tracking lost (with duration)
+- `ar_activation` — First scan per session
+- `ar_scan_duration` — View time per target
+- `ar_cta_click` — URL/phone/share clicks
+- `ar_screenshot` — Screenshot captured
+- `ar_camera_flip` — Camera flipped
+- `ar_error` — Errors logged
+
+---
+
+## Architecture Flow
+
+```
+Client's AR Build ──(ar-analytics.js)──→ Your Hostinger Server
+                                              │
+                                         MySQL Database
+                                              │
+                                    ┌─────────┴─────────┐
+                              Admin Panel         Client Dashboard
+                              /admin/              /dashboard/
+                         (You manage              (Clients see
+                          clients &                their stats)
+                          API keys)
+```
+
+---
+
+## Project Structure
+
+```
+ar-analytics/
+├── .htaccess              ← URL rewriting & security
+├── install.php            ← One-time setup (DELETE after install!)
+├── README.md              ← Quick start guide
+├── DEPLOYMENT_GUIDE.md    ← This file
+├── tracker/
+│   └── ar-analytics.js    ← Lightweight tracker (~3KB)
+├── api/
+│   ├── config.php         ← Database & app configuration
+│   ├── index.php          ← API router
+│   ├── helpers/
+│   │   ├── Database.php   ← PDO wrapper
+│   │   ├── Auth.php       ← Token authentication
+│   │   └── Response.php   ← JSON response helper
+│   └── controllers/
+│       ├── track.php      ← Event collection (public)
+│       ├── auth.php       ← Login/logout
+│       ├── dashboard.php  ← Dashboard data queries
+│       └── admin.php      ← Client/project CRUD
+├── admin/
+│   └── index.html         ← Admin panel (SPA)
+├── dashboard/
+│   └── index.html         ← Client dashboard (SPA)
+└── sql/
+    └── schema.sql         ← Database schema
+```
+
+---
+
+## Monetization Tiers (Suggested)
+
+| Feature | Free | Pro (₹499/mo) | Business (₹999/mo) |
+|---------|------|---------------|-------------------|
+| Page views tracked | 1,000/mo | 50,000/mo | Unlimited |
+| Dashboard access | ❌ | ✅ | ✅ |
+| Real-time data | ❌ | 15-min delay | ✅ Real-time |
+| Data retention | 7 days | 90 days | 1 year |
+| AR scan tracking | Basic | Full | Full + Heatmaps |
+| Export CSV | ❌ | ✅ | ✅ |
+| Custom branding | ❌ | ❌ | ✅ White-label |
+| API access | ❌ | ❌ | ✅ |
+
+---
+
+## URLs After Deployment
+
+| URL | Purpose |
+|-----|---------|
+| `yourdomain.com/ar-analytics/admin/` | Admin panel (manage clients & projects) |
+| `yourdomain.com/ar-analytics/dashboard/` | Client dashboard (login with client email) |
+| `yourdomain.com/ar-analytics/tracker/ar-analytics.js` | Tracker script |
+| `yourdomain.com/ar-analytics/api/` | API status check |

@@ -31,6 +31,9 @@ namespace Imagine.WebAR
         [DllImport("__Internal")] private static extern bool IsWebGLiTrackerReady();
         [DllImport("__Internal")] private static extern float DebugImageTarget(string id);
         [DllImport("__Internal")] private static extern bool IsWebGLImageTracked(string id);
+        // Analytics
+        [DllImport("__Internal")] private static extern void WebGLTrackImageFound(string id);
+        [DllImport("__Internal")] private static extern void WebGLTrackImageLost(string id);
 #endif
         
 
@@ -197,6 +200,11 @@ namespace Imagine.WebAR
                 Debug.LogError("Found an already tracked id - " + id);
 
             OnImageFound?.Invoke(id);
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // Analytics: track image found
+            WebGLTrackImageFound(id);
+#endif
         }
 
         void OnTrackingLost(string id)
@@ -216,6 +224,11 @@ namespace Imagine.WebAR
             }
 
             OnImageLost?.Invoke(id);
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // Analytics: track image lost
+            WebGLTrackImageLost(id);
+#endif
         }
 
         void OnTrack(string data)

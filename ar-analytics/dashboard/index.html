@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Analytics — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0b0f;
+            --bg-secondary: #111318;
+            --bg-card: #161920;
+            --bg-card-hover: #1c1f28;
+            --border: #1e2230;
+            --border-glow: #2a3045;
+            --text-primary: #f0f2f5;
+            --text-secondary: #8b92a5;
+            --text-muted: #555d72;
+            --accent-green: #00e68a;
+            --accent-green-dim: rgba(0, 230, 138, 0.15);
+            --accent-cyan: #00d4ff;
+            --accent-cyan-dim: rgba(0, 212, 255, 0.15);
+            --accent-purple: #8b5cf6;
+            --accent-purple-dim: rgba(139, 92, 246, 0.15);
+            --accent-orange: #f59e0b;
+            --accent-orange-dim: rgba(245, 158, 11, 0.15);
+            --accent-pink: #ec4899;
+            --accent-pink-dim: rgba(236, 72, 153, 0.15);
+            --accent-blue: #3b82f6;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ─── Login Screen ─── */
+        #login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 30% 20%, rgba(0, 230, 138, 0.05) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                        var(--bg-primary);
+        }
+
+        .login-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow);
+        }
+
+        .login-box h1 {
+            font-size: 28px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .login-box h1 span { color: var(--accent-green); }
+
+        .login-box p {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px var(--accent-green-dim);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-green), #00c07a);
+            color: #000;
+            padding: 14px;
+            font-size: 15px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(0, 230, 138, 0.3);
+        }
+
+        .login-error {
+            color: #ef4444;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 12px;
+            display: none;
+        }
+
+        /* ─── Dashboard Layout ─── */
+        #dashboard-screen { display: none; }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 32px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 800;
+        }
+        .logo-text span { color: var(--accent-green); }
+
+        .project-selector {
+            padding: 8px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .range-selector {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .range-btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .range-btn.active, .range-btn:hover {
+            background: var(--accent-green);
+            color: #000;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 14px 6px 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: #000;
+        }
+
+        .user-name { font-size: 13px; font-weight: 500; }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-logout:hover { border-color: #ef4444; color: #ef4444; }
+
+        /* ─── Main Content ─── */
+        .dashboard-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-header h1 {
+            font-size: 42px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+        .section-header h1 span { 
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ─── Stats Overview ─── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+            opacity: 0;
+            transition: var(--transition);
+        }
+        .stat-card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
+        }
+        .stat-card:hover::before { opacity: 1; }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .stat-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ─── Chart Cards ─── */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            transition: var(--transition);
+        }
+        .chart-card:hover { border-color: var(--border-glow); }
+
+        .chart-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .chart-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 240px;
+        }
+
+        /* ─── Donut Stats Row ─── */
+        .donut-row {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            padding: 16px 0;
+        }
+
+        .donut-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .donut-canvas-wrap {
+            width: 100px;
+            height: 100px;
+            position: relative;
+        }
+
+        .donut-percent {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .donut-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ─── Metric Cards Grid ─── */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .metric-card:hover {
+            border-color: var(--accent-green);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 230, 138, 0.1);
+        }
+        .metric-card.active {
+            border-color: var(--accent-green);
+            background: var(--accent-green-dim);
+        }
+
+        .metric-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .metric-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* ─── Detail Panel ─── */
+        .detail-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 24px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .detail-panel.visible { display: block; }
+
+        .detail-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .detail-list {
+            list-style: none;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .detail-item:last-child { border-bottom: none; }
+
+        .detail-item-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .detail-item-bar {
+            flex: 1;
+            max-width: 200px;
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            margin: 0 16px;
+            overflow: hidden;
+        }
+        .detail-item-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+            transition: width 0.6s ease;
+        }
+
+        .detail-item-value {
+            font-size: 14px;
+            font-weight: 600;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        /* ─── Loading ─── */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 11, 15, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--accent-green);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 1024px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .top-bar { padding: 12px 16px; flex-wrap: wrap; gap: 12px; }
+            .dashboard-content { padding: 16px; }
+            .section-header h1 { font-size: 28px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .range-selector { flex-wrap: wrap; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN SCREEN ═══════════ -->
+<div id="login-screen">
+    <div class="login-box">
+        <h1>AR <span>Analytics</span></h1>
+        <p>Sign in to view your dashboard</p>
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="login-email" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Sign In</button>
+            <p class="login-error" id="login-error"></p>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════ DASHBOARD SCREEN ═══════════ -->
+<div id="dashboard-screen">
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <div class="logo-text">AR <span>Analytics</span></div>
+            <select id="project-select" class="project-selector" onchange="switchProject()"></select>
+        </div>
+        <div class="top-bar-right">
+            <div class="range-selector" id="range-selector">
+                <button class="range-btn" data-range="24h">24H</button>
+                <button class="range-btn active" data-range="7d">7D</button>
+                <button class="range-btn" data-range="30d">30D</button>
+                <button class="range-btn" data-range="90d">90D</button>
+            </div>
+            <div class="user-badge" id="user-badge">
+                <div class="user-avatar" id="user-avatar">P</div>
+                <span class="user-name" id="user-name">User</span>
+            </div>
+            <button class="btn-logout" onclick="handleLogout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <!-- Header -->
+        <div class="section-header">
+            <h1>Track Every <span>Interaction.</span></h1>
+            <p>Know exactly how your AR experiences perform. Every scan, every view, every detail — right here.</p>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-row" id="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Total Views</div>
+                <div class="stat-value" id="stat-views">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Unique Visitors</div>
+                <div class="stat-value" id="stat-visitors">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">AR Activations</div>
+                <div class="stat-value" id="stat-activations">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Duration</div>
+                <div class="stat-value" id="stat-duration">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Return Rate</div>
+                <div class="stat-value" id="stat-return">-</div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Views Over Time</div>
+                <div class="chart-subtitle" id="chart-range-label">Last 7 Days</div>
+                <div class="chart-container">
+                    <canvas id="views-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Device & OS Split</div>
+                <div class="chart-subtitle">Visitor breakdown</div>
+                <div class="donut-row" id="donut-row">
+                    <div class="donut-item">
+                        <div class="donut-canvas-wrap">
+                            <canvas id="donut-mobile"></canvas>
+                            <div class="donut-percent" style="color:var(--accent-cyan)" id="donut-mobile-pct">-</div>
+                        </div>
+                        <div class="donut-label">Mobile</div>
+                    </div>
+                    <div class="donut-item">
+                        <div class="donut-canvas-wrap">
+                            <canvas id="donut-ios"></canvas>
+                            <div class="donut-percent" style="color:var(--accent-purple)" id="donut-ios-pct">-</div>
+                        </div>
+                        <div class="donut-label">iOS</div>
+                    </div>
+                    <div class="donut-item">
+                        <div class="donut-canvas-wrap">
+                            <canvas id="donut-ar"></canvas>
+                            <div class="donut-percent" style="color:var(--accent-orange)" id="donut-ar-pct">-</div>
+                        </div>
+                        <div class="donut-label">AR Used</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric Cards Grid -->
+        <div class="metrics-grid" id="metrics-grid">
+            <div class="metric-card" data-metric="devices" onclick="showDetail('devices')">
+                <span class="metric-icon">📱</span>
+                <div class="metric-name">Device Type</div>
+            </div>
+            <div class="metric-card" data-metric="os" onclick="showDetail('os')">
+                <span class="metric-icon">💻</span>
+                <div class="metric-name">Operating System</div>
+            </div>
+            <div class="metric-card" data-metric="browsers" onclick="showDetail('browsers')">
+                <span class="metric-icon">🌐</span>
+                <div class="metric-name">Browser</div>
+            </div>
+            <div class="metric-card" data-metric="locations" onclick="showDetail('locations')">
+                <span class="metric-icon">🌍</span>
+                <div class="metric-name">Country & City</div>
+            </div>
+            <div class="metric-card" data-metric="traffic" onclick="showDetail('traffic')">
+                <span class="metric-icon">🔗</span>
+                <div class="metric-name">Traffic Source</div>
+            </div>
+            <div class="metric-card" data-metric="screen-sizes" onclick="showDetail('screen-sizes')">
+                <span class="metric-icon">📐</span>
+                <div class="metric-name">Screen Size</div>
+            </div>
+            <div class="metric-card" data-metric="languages" onclick="showDetail('languages')">
+                <span class="metric-icon">🗣</span>
+                <div class="metric-name">Language</div>
+            </div>
+            <div class="metric-card" data-metric="ar-stats" onclick="showDetail('ar-stats')">
+                <span class="metric-icon">🎯</span>
+                <div class="metric-name">AR Activations</div>
+            </div>
+            <div class="metric-card" data-metric="sessions-list" onclick="showDetail('sessions-list')">
+                <span class="metric-icon">⏱</span>
+                <div class="metric-name">Session Duration</div>
+            </div>
+            <div class="metric-card" data-metric="visitors" onclick="showDetail('visitors')">
+                <span class="metric-icon">👥</span>
+                <div class="metric-name">Unique Visitors</div>
+            </div>
+            <div class="metric-card" data-metric="return-rate" onclick="showDetail('return-rate')">
+                <span class="metric-icon">🔄</span>
+                <div class="metric-name">Return Rate</div>
+            </div>
+            <div class="metric-card" data-metric="peak-hours" onclick="showDetail('peak-hours')">
+                <span class="metric-icon">🕐</span>
+                <div class="metric-name">Peak Hours</div>
+            </div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detail-panel">
+            <div class="detail-title" id="detail-title">Details</div>
+            <ul class="detail-list" id="detail-list"></ul>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loading" style="display:none">
+    <div class="spinner"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// AR Analytics Dashboard — Client Side
+// ═══════════════════════════════════════════
+
+const API_BASE = window.location.pathname.replace('/dashboard/', '/').replace('/dashboard', '/');
+
+let authToken = localStorage.getItem('ara_token') || '';
+let currentUser = null;
+let currentProjectId = null;
+let currentRange = '7d';
+let overviewData = null;
+let viewsChart = null;
+let donutCharts = {};
+
+// ─── Auto-login check ───
+(function init() {
+    if (authToken) {
+        fetchAPI('auth?action=me').then(data => {
+            if (data && data.success) {
+                currentUser = data.data;
+                showDashboard();
+            } else {
+                localStorage.removeItem('ara_token');
+                authToken = '';
+            }
+        }).catch(() => {
+            localStorage.removeItem('ara_token');
+            authToken = '';
+        });
+    }
+})();
+
+// ─── Auth ───
+async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+    
+    try {
+        const data = await fetchAPI('auth?action=login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+        });
+
+        if (data.success) {
+            authToken = data.data.token;
+            localStorage.setItem('ara_token', authToken);
+            currentUser = data.data.user;
+            currentUser.projects = data.data.projects;
+            errorEl.style.display = 'none';
+            showDashboard();
+        } else {
+            errorEl.textContent = data.message;
+            errorEl.style.display = 'block';
+        }
+    } catch (err) {
+        errorEl.textContent = 'Connection failed. Please try again.';
+        errorEl.style.display = 'block';
+    }
+}
+
+function handleLogout() {
+    authToken = '';
+    currentUser = null;
+    localStorage.removeItem('ara_token');
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('dashboard-screen').style.display = 'none';
+}
+
+// ─── Dashboard Init ───
+function showDashboard() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard-screen').style.display = 'block';
+
+    // Set user info
+    const name = currentUser.name || currentUser.username || 'User';
+    document.getElementById('user-name').textContent = name;
+    document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+
+    // Populate project selector
+    const select = document.getElementById('project-select');
+    select.innerHTML = '';
+    const projects = currentUser.projects || [];
+    projects.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        select.appendChild(opt);
+    });
+
+    if (projects.length > 0) {
+        currentProjectId = projects[0].id;
+        loadDashboardData();
+    }
+
+    // Range buttons
+    document.querySelectorAll('.range-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelector('.range-btn.active').classList.remove('active');
+            btn.classList.add('active');
+            currentRange = btn.dataset.range;
+            loadDashboardData();
+        });
+    });
+}
+
+function switchProject() {
+    currentProjectId = document.getElementById('project-select').value;
+    loadDashboardData();
+}
+
+// ─── Data Loading ───
+async function loadDashboardData() {
+    showLoading(true);
+    try {
+        await Promise.all([
+            loadOverview(),
+            loadViewsOverTime(),
+            loadDevices(),
+        ]);
+    } catch (err) {
+        console.error('Failed to load dashboard:', err);
+    }
+    showLoading(false);
+}
+
+async function loadOverview() {
+    const data = await fetchAPI(`dashboard?action=overview&project_id=${currentProjectId}&range=${currentRange}`);
+    if (!data.success) return;
+    overviewData = data.data;
+
+    document.getElementById('stat-views').textContent = formatNumber(overviewData.total_views);
+    document.getElementById('stat-visitors').textContent = formatNumber(overviewData.unique_visitors);
+    document.getElementById('stat-activations').textContent = formatNumber(overviewData.ar_activations);
+    document.getElementById('stat-duration').textContent = formatDuration(overviewData.avg_session_duration);
+    document.getElementById('stat-return').textContent = overviewData.return_rate + '%';
+
+    // Update range label
+    const labels = { '24h': 'Last 24 Hours', '7d': 'Last 7 Days', '30d': 'Last 30 Days', '90d': 'Last 90 Days' };
+    document.getElementById('chart-range-label').textContent = labels[currentRange] || 'Last 7 Days';
+}
+
+async function loadViewsOverTime() {
+    const data = await fetchAPI(`dashboard?action=views-over-time&project_id=${currentProjectId}&range=${currentRange}`);
+    if (!data.success) return;
+
+    const labels = data.data.map(d => {
+        if (d.day_name) return d.day_name.substring(0, 3);
+        return new Date(d.date).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    });
+    const values = data.data.map(d => d.views);
+
+    // Find max value for highlight
+    const maxVal = Math.max(...values);
+
+    const ctx = document.getElementById('views-chart').getContext('2d');
+    if (viewsChart) viewsChart.destroy();
+
+    viewsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                backgroundColor: values.map(v => v === maxVal ? '#8b5cf6' : '#00e68a'),
+                borderRadius: 6,
+                borderSkipped: false,
+                barPercentage: 0.6,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1c1f28',
+                    titleColor: '#f0f2f5',
+                    bodyColor: '#8b92a5',
+                    borderColor: '#2a3045',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    padding: 12,
+                },
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#555d72', font: { size: 11 } },
+                    border: { display: false },
+                },
+                y: {
+                    grid: { color: '#1e223020' },
+                    ticks: { color: '#555d72', font: { size: 11 } },
+                    border: { display: false },
+                    beginAtZero: true,
+                },
+            },
+        },
+    });
+}
+
+async function loadDevices() {
+    const data = await fetchAPI(`dashboard?action=devices&project_id=${currentProjectId}&range=${currentRange}`);
+    if (!data.success) return;
+
+    const d = data.data;
+    
+    // Mobile percentage
+    const mobileCount = d.devices.find(x => x.label === 'mobile');
+    const total = d.total_sessions || 1;
+    const mobilePct = mobileCount ? Math.round((mobileCount.count / total) * 100) : 0;
+
+    // iOS percentage
+    const iosCount = d.os.find(x => x.label === 'iOS');
+    const iosPct = iosCount ? Math.round((iosCount.count / total) * 100) : 0;
+
+    // AR usage
+    const arPct = d.ar_usage_rate || 0;
+
+    document.getElementById('donut-mobile-pct').textContent = mobilePct + '%';
+    document.getElementById('donut-ios-pct').textContent = iosPct + '%';
+    document.getElementById('donut-ar-pct').textContent = Math.round(arPct) + '%';
+
+    renderDonut('donut-mobile', mobilePct, '#00d4ff');
+    renderDonut('donut-ios', iosPct, '#8b5cf6');
+    renderDonut('donut-ar', arPct, '#f59e0b');
+}
+
+function renderDonut(canvasId, percentage, color) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    if (donutCharts[canvasId]) donutCharts[canvasId].destroy();
+
+    donutCharts[canvasId] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [percentage, 100 - percentage],
+                backgroundColor: [color, '#1e2230'],
+                borderWidth: 0,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '78%',
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            animation: { animateRotate: true, duration: 1000 },
+        },
+    });
+}
+
+// ─── Detail Panel ───
+async function showDetail(metric) {
+    // Toggle active card
+    document.querySelectorAll('.metric-card').forEach(c => c.classList.remove('active'));
+    const card = document.querySelector(`.metric-card[data-metric="${metric}"]`);
+    if (card) card.classList.add('active');
+
+    const panel = document.getElementById('detail-panel');
+    const title = document.getElementById('detail-title');
+    const list = document.getElementById('detail-list');
+    
+    panel.classList.add('visible');
+    list.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text-muted)">Loading...</li>';
+
+    const titles = {
+        'devices': 'Device Types',
+        'os': 'Operating Systems',
+        'browsers': 'Browsers',
+        'locations': 'Countries & Cities',
+        'traffic': 'Traffic Sources',
+        'screen-sizes': 'Screen Sizes',
+        'languages': 'Languages',
+        'ar-stats': 'AR Statistics',
+        'sessions-list': 'Recent Sessions',
+        'visitors': 'Visitor Breakdown',
+        'return-rate': 'Return Rate Details',
+        'peak-hours': 'Peak Hours',
+    };
+    title.textContent = titles[metric] || metric;
+
+    try {
+        let endpoint = metric;
+        // Map metric names to API endpoints
+        if (metric === 'os') endpoint = 'devices';
+        if (metric === 'visitors' || metric === 'return-rate') endpoint = 'overview';
+
+        const data = await fetchAPI(`dashboard?action=${endpoint}&project_id=${currentProjectId}&range=${currentRange}`);
+        if (!data.success) return;
+
+        let items = [];
+        const d = data.data;
+
+        switch (metric) {
+            case 'devices':
+                items = d.devices || [];
+                break;
+            case 'os':
+                items = d.os || [];
+                break;
+            case 'browsers':
+                items = d;
+                break;
+            case 'locations':
+                items = d.countries || [];
+                break;
+            case 'traffic':
+                items = d.sources || [];
+                break;
+            case 'screen-sizes':
+            case 'languages':
+                items = d;
+                break;
+            case 'ar-stats':
+                renderARStats(d);
+                return;
+            case 'sessions-list':
+                renderSessionsList(d);
+                return;
+            case 'peak-hours':
+                renderPeakHours(d);
+                return;
+            case 'visitors':
+                items = [
+                    { label: 'New Visitors', count: d.new_visitors },
+                    { label: 'Returning Visitors', count: d.returning_visitors },
+                    { label: 'Total Unique', count: d.unique_visitors },
+                ];
+                break;
+            case 'return-rate':
+                items = [
+                    { label: 'Total Views', count: d.total_views },
+                    { label: 'Returning', count: d.returning_visitors },
+                    { label: 'Return Rate', count: d.return_rate + '%' },
+                ];
+                break;
+        }
+
+        renderDetailList(items);
+    } catch (err) {
+        list.innerHTML = '<li style="padding:20px;text-align:center;color:#ef4444">Failed to load data</li>';
+    }
+}
+
+function renderDetailList(items) {
+    const list = document.getElementById('detail-list');
+    if (!items || items.length === 0) {
+        list.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text-muted)">No data available</li>';
+        return;
+    }
+
+    const maxCount = Math.max(...items.map(i => typeof i.count === 'number' ? i.count : 0));
+
+    list.innerHTML = items.map(item => {
+        const pct = maxCount > 0 && typeof item.count === 'number' ? (item.count / maxCount * 100) : 0;
+        return `
+            <li class="detail-item">
+                <span class="detail-item-label">${escapeHtml(item.label || 'Unknown')}</span>
+                <div class="detail-item-bar">
+                    <div class="detail-item-bar-fill" style="width:${pct}%"></div>
+                </div>
+                <span class="detail-item-value">${typeof item.count === 'number' ? formatNumber(item.count) : item.count}</span>
+            </li>
+        `;
+    }).join('');
+}
+
+function renderARStats(d) {
+    const list = document.getElementById('detail-list');
+    const items = [
+        { label: 'Total AR Activations', count: d.activations?.reduce((s, a) => s + a.count, 0) || 0 },
+        { label: 'Avg Scan Duration', count: formatDuration(d.avg_scan_duration) },
+        { label: 'CTA Clicks', count: d.cta_clicks || 0 },
+    ];
+
+    if (d.top_targets && d.top_targets.length > 0) {
+        d.top_targets.forEach(t => {
+            items.push({ label: '🎯 Target: ' + (t.target_id || 'Unknown'), count: t.count });
+        });
+    }
+
+    renderDetailList(items);
+}
+
+function renderSessionsList(d) {
+    const list = document.getElementById('detail-list');
+    if (!d.sessions || d.sessions.length === 0) {
+        list.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text-muted)">No sessions found</li>';
+        return;
+    }
+
+    list.innerHTML = d.sessions.slice(0, 20).map(s => `
+        <li class="detail-item">
+            <span class="detail-item-label">
+                ${s.device_type} · ${s.browser} · ${s.country}
+                <br><small style="color:var(--text-muted)">${new Date(s.started_at).toLocaleString()}</small>
+            </span>
+            <span class="detail-item-value">${formatDuration(s.duration_seconds)}</span>
+        </li>
+    `).join('');
+}
+
+function renderPeakHours(d) {
+    const list = document.getElementById('detail-list');
+    const maxCount = Math.max(...d.map(h => h.count));
+
+    list.innerHTML = d.map(h => `
+        <li class="detail-item">
+            <span class="detail-item-label">${h.label}</span>
+            <div class="detail-item-bar">
+                <div class="detail-item-bar-fill" style="width:${maxCount > 0 ? (h.count / maxCount * 100) : 0}%"></div>
+            </div>
+            <span class="detail-item-value">${h.count}</span>
+        </li>
+    `).join('');
+}
+
+// ─── API Helper ───
+async function fetchAPI(endpoint, options = {}) {
+    const url = API_BASE + 'api/controllers/' + endpoint.split('?')[0] + '.php' + 
+                (endpoint.includes('?') ? '?' + endpoint.split('?')[1] : '');
+    
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+    };
+    
+    if (authToken) {
+        headers['Authorization'] = 'Bearer ' + authToken;
+    }
+
+    const response = await fetch(url, { ...options, headers });
+    return response.json();
+}
+
+// ─── Utilities ───
+function formatNumber(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return n.toString();
+}
+
+function formatDuration(seconds) {
+    if (!seconds || seconds === 0) return '0s';
+    if (seconds < 60) return seconds + 's';
+    const min = Math.floor(seconds / 60);
+    const sec = seconds % 60;
+    return min + 'm ' + sec + 's';
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function showLoading(show) {
+    document.getElementById('loading').style.display = show ? 'flex' : 'none';
+}
+</script>
+</body>
+</html>

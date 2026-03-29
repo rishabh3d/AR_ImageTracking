@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Analytics — Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0b0f;
+            --bg-secondary: #111318;
+            --bg-card: #161920;
+            --bg-card-hover: #1c1f28;
+            --border: #1e2230;
+            --border-glow: #2a3045;
+            --text-primary: #f0f2f5;
+            --text-secondary: #8b92a5;
+            --text-muted: #555d72;
+            --accent-green: #00e68a;
+            --accent-green-dim: rgba(0, 230, 138, 0.15);
+            --accent-cyan: #00d4ff;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ─── Login ─── */
+        #login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 30% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+                        var(--bg-primary);
+        }
+
+        .login-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow);
+        }
+        .login-box h1 { font-size: 28px; font-weight: 800; text-align: center; margin-bottom: 8px; }
+        .login-box h1 span { color: var(--accent-purple); }
+        .login-box .subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 32px; font-size: 14px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px 16px; background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); color: var(--text-primary); font-size: 14px; font-family: inherit; outline: none;
+            transition: var(--transition);
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px 24px; border: none; border-radius: var(--radius-sm);
+            font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple), #7c3aed); color: #fff;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(139,92,246,0.3); }
+        .btn-full { width: 100%; padding: 14px; font-size: 15px; }
+        .btn-sm { padding: 8px 16px; font-size: 13px; }
+        .btn-success { background: var(--accent-green); color: #000; }
+        .btn-danger { background: var(--accent-red); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .btn-outline:hover { border-color: var(--text-secondary); }
+
+        .login-error { color: var(--accent-red); font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+
+        /* ─── Layout ─── */
+        #admin-screen { display: none; }
+
+        .top-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 32px; background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo-text { font-size: 18px; font-weight: 800; }
+        .logo-text span { color: var(--accent-purple); }
+
+        .top-bar-right { display: flex; align-items: center; gap: 12px; }
+        .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: var(--radius-sm); font-family: inherit; font-size: 12px; cursor: pointer; transition: var(--transition); }
+        .btn-logout:hover { border-color: var(--accent-red); color: var(--accent-red); }
+
+        .admin-content { max-width: 1400px; margin: 0 auto; padding: 32px; }
+
+        /* ─── Stats Row ─── */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;
+            transition: var(--transition);
+        }
+        .stat-card:hover { border-color: var(--border-glow); transform: translateY(-2px); }
+        .stat-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .stat-value { font-size: 32px; font-weight: 800; }
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.purple { color: var(--accent-purple); }
+        .stat-value.cyan { color: var(--accent-cyan); }
+        .stat-value.orange { color: var(--accent-orange); }
+
+        /* ─── Tabs ─── */
+        .tabs {
+            display: flex; gap: 4px; background: var(--bg-card); border-radius: var(--radius-sm);
+            padding: 4px; border: 1px solid var(--border); margin-bottom: 24px; width: fit-content;
+        }
+        .tab-btn {
+            padding: 10px 24px; border: none; border-radius: 8px; background: transparent;
+            color: var(--text-secondary); font-family: inherit; font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: var(--transition);
+        }
+        .tab-btn.active { background: var(--accent-purple); color: #fff; }
+        .tab-btn:hover:not(.active) { color: var(--text-primary); }
+
+        /* ─── Table ─── */
+        .table-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .table-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 24px; border-bottom: 1px solid var(--border);
+        }
+        .table-header h2 { font-size: 18px; font-weight: 700; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            text-align: left; padding: 14px 20px; font-size: 12px; font-weight: 600;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+            background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+        }
+        tbody tr { transition: var(--transition); }
+        tbody tr:hover { background: var(--bg-card-hover); }
+        tbody td {
+            padding: 14px 20px; font-size: 14px; border-bottom: 1px solid var(--border);
+        }
+
+        .badge {
+            display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 11px;
+            font-weight: 600; text-transform: uppercase;
+        }
+        .badge-free { background: rgba(100,116,139,0.2); color: #94a3b8; }
+        .badge-pro { background: var(--accent-green-dim); color: var(--accent-green); }
+        .badge-business { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+        .badge-active { background: rgba(0,230,138,0.15); color: var(--accent-green); }
+        .badge-inactive { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+
+        .api-key-cell {
+            font-family: 'Courier New', monospace; font-size: 12px; color: var(--text-muted);
+            max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            cursor: pointer;
+        }
+        .api-key-cell:hover { color: var(--accent-cyan); }
+
+        .actions-cell { display: flex; gap: 8px; }
+
+        /* ─── Modal ─── */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-overlay.visible { display: flex; }
+
+        .modal {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 32px; width: 100%; max-width: 500px; box-shadow: var(--shadow);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .modal h2 { font-size: 22px; font-weight: 700; margin-bottom: 24px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 768px) {
+            .top-bar { padding: 12px 16px; }
+            .admin-content { padding: 16px; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .table-card { overflow-x: auto; }
+            table { min-width: 700px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN ═══════════ -->
+<div id="login-screen">
+    <div class="login-box">
+        <h1>Admin <span>Panel</span></h1>
+        <p class="subtitle">AR Analytics Management</p>
+        <form onsubmit="adminLogin(event)">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="admin-username" placeholder="admin" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="admin-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+            <p class="login-error" id="login-error"></p>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════ ADMIN SCREEN ═══════════ -->
+<div id="admin-screen">
+    <div class="top-bar">
+        <div class="logo-text">Admin <span>Panel</span></div>
+        <div class="top-bar-right">
+            <span id="admin-name" style="font-size:13px;color:var(--text-secondary)">admin</span>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="admin-content">
+        <!-- Stats -->
+        <div class="stats-row" id="admin-stats">
+            <div class="stat-card"><div class="stat-label">Total Clients</div><div class="stat-value green" id="s-clients">-</div></div>
+            <div class="stat-card"><div class="stat-label">Active Clients</div><div class="stat-value cyan" id="s-active">-</div></div>
+            <div class="stat-card"><div class="stat-label">Total Projects</div><div class="stat-value purple" id="s-projects">-</div></div>
+            <div class="stat-card"><div class="stat-label">Views (30d)</div><div class="stat-value orange" id="s-views">-</div></div>
+            <div class="stat-card"><div class="stat-label">Views Today</div><div class="stat-value green" id="s-today">-</div></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('clients')">Clients</button>
+            <button class="tab-btn" onclick="switchTab('projects')">Projects</button>
+        </div>
+
+        <!-- Clients Table -->
+        <div id="tab-clients" class="table-card">
+            <div class="table-header">
+                <h2>Clients</h2>
+                <button class="btn btn-primary btn-sm" onclick="openModal('create-client')">+ Add Client</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Company</th>
+                        <th>Plan</th>
+                        <th>Views (30d)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="clients-tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- Projects Table -->
+        <div id="tab-projects" class="table-card" style="display:none">
+            <div class="table-header">
+                <h2>Projects</h2>
+                <button class="btn btn-primary btn-sm" onclick="openModal('create-project')">+ Add Project</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Client</th>
+                        <th>API Key</th>
+                        <th>Domain</th>
+                        <th>Sessions (30d)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="projects-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ MODALS ═══════════ -->
+
+<!-- Create Client Modal -->
+<div class="modal-overlay" id="modal-create-client">
+    <div class="modal">
+        <h2>Add New Client</h2>
+        <form onsubmit="createClient(event)">
+            <div class="form-group"><label>Name *</label><input type="text" id="cc-name" required></div>
+            <div class="form-group"><label>Email *</label><input type="email" id="cc-email" required></div>
+            <div class="form-group"><label>Password *</label><input type="password" id="cc-password" required minlength="8"></div>
+            <div class="form-group"><label>Company</label><input type="text" id="cc-company"></div>
+            <div class="form-group"><label>Phone</label><input type="text" id="cc-phone"></div>
+            <div class="form-group">
+                <label>Plan</label>
+                <select id="cc-plan">
+                    <option value="free">Free</option>
+                    <option value="pro">Pro</option>
+                    <option value="business">Business</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('create-client')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Client</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal-overlay" id="modal-create-project">
+    <div class="modal">
+        <h2>Add New Project</h2>
+        <form onsubmit="createProject(event)">
+            <div class="form-group">
+                <label>Client *</label>
+                <select id="cp-client" required></select>
+            </div>
+            <div class="form-group"><label>Project Name *</label><input type="text" id="cp-name" required></div>
+            <div class="form-group"><label>Domain</label><input type="text" id="cp-domain" placeholder="e.g. client-ar.com"></div>
+            <div class="form-group"><label>Description</label><textarea id="cp-desc"></textarea></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('create-project')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- API Key Display Modal -->
+<div class="modal-overlay" id="modal-api-key">
+    <div class="modal">
+        <h2>🔑 Project API Key</h2>
+        <p style="color:var(--text-secondary);margin-bottom:16px">Add this to your AR build's index.html:</p>
+        <div style="background:var(--bg-secondary);padding:16px;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:16px">
+            <code id="api-key-code" style="font-size:13px;color:var(--accent-cyan);word-break:break-all"></code>
+        </div>
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px">Tracker script tag:</p>
+        <div style="background:var(--bg-secondary);padding:16px;border-radius:var(--radius-sm);border:1px solid var(--border)">
+            <code id="tracker-snippet" style="font-size:12px;color:var(--accent-green);word-break:break-all"></code>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="closeModal('api-key')">Done</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_BASE = window.location.pathname.replace('/admin/', '/').replace('/admin', '/');
+let token = localStorage.getItem('ara_admin_token') || '';
+let clientsList = [];
+
+// ─── Init ───
+(function() {
+    if (token) {
+        fetchAPI('auth?action=me').then(d => {
+            if (d.success && d.data.role === 'admin') showAdmin(d.data);
+            else { localStorage.removeItem('ara_admin_token'); token = ''; }
+        }).catch(() => { localStorage.removeItem('ara_admin_token'); token = ''; });
+    }
+})();
+
+// ─── Auth ───
+async function adminLogin(e) {
+    e.preventDefault();
+    const err = document.getElementById('login-error');
+    try {
+        const d = await fetchAPI('auth?action=admin-login', {
+            method: 'POST',
+            body: JSON.stringify({
+                username: document.getElementById('admin-username').value,
+                password: document.getElementById('admin-password').value,
+            }),
+        });
+        if (d.success) {
+            token = d.data.token;
+            localStorage.setItem('ara_admin_token', token);
+            err.style.display = 'none';
+            showAdmin(d.data.user);
+        } else {
+            err.textContent = d.message; err.style.display = 'block';
+        }
+    } catch (e) { err.textContent = 'Connection failed'; err.style.display = 'block'; }
+}
+
+function logout() {
+    token = ''; localStorage.removeItem('ara_admin_token');
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-screen').style.display = 'none';
+}
+
+function showAdmin(user) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    document.getElementById('admin-name').textContent = user.username || 'admin';
+    loadAdminData();
+}
+
+// ─── Data Loading ───
+async function loadAdminData() {
+    const [overview, clients, projects] = await Promise.all([
+        fetchAPI('admin?action=overview'),
+        fetchAPI('admin?action=clients'),
+        fetchAPI('admin?action=projects'),
+    ]);
+
+    if (overview.success) {
+        const o = overview.data;
+        document.getElementById('s-clients').textContent = o.total_clients;
+        document.getElementById('s-active').textContent = o.active_clients;
+        document.getElementById('s-projects').textContent = o.total_projects;
+        document.getElementById('s-views').textContent = formatNum(o.views_30d);
+        document.getElementById('s-today').textContent = formatNum(o.views_today);
+    }
+
+    if (clients.success) {
+        clientsList = clients.data;
+        renderClients(clients.data);
+        populateClientSelect(clients.data);
+    }
+
+    if (projects.success) renderProjects(projects.data);
+}
+
+function renderClients(data) {
+    const tbody = document.getElementById('clients-tbody');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No clients yet</td></tr>'; return; }
+    tbody.innerHTML = data.map(c => `
+        <tr>
+            <td><strong>${esc(c.name)}</strong></td>
+            <td>${esc(c.email)}</td>
+            <td>${esc(c.company || '-')}</td>
+            <td><span class="badge badge-${c.plan_tier}">${c.plan_tier}</span></td>
+            <td>${formatNum(c.total_views || 0)}</td>
+            <td><span class="badge badge-${c.is_active ? 'active' : 'inactive'}">${c.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td class="actions-cell">
+                <button class="btn btn-outline btn-sm" onclick="toggleClient(${c.id}, ${c.is_active})">${c.is_active ? 'Disable' : 'Enable'}</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteClient(${c.id}, '${esc(c.name)}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderProjects(data) {
+    const tbody = document.getElementById('projects-tbody');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No projects yet</td></tr>'; return; }
+    tbody.innerHTML = data.map(p => `
+        <tr>
+            <td><strong>${esc(p.name)}</strong></td>
+            <td>${esc(p.client_name || '-')}</td>
+            <td class="api-key-cell" onclick="showApiKey('${p.api_key}', '${esc(p.name)}')" title="Click to view">${p.api_key.substring(0, 16)}...</td>
+            <td>${esc(p.domain || '-')}</td>
+            <td>${formatNum(p.total_sessions || 0)}</td>
+            <td><span class="badge badge-${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td class="actions-cell">
+                <button class="btn btn-outline btn-sm" onclick="showApiKey('${p.api_key}', '${esc(p.name)}')">🔑 Key</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteProject(${p.id}, '${esc(p.name)}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function populateClientSelect(clients) {
+    const sel = document.getElementById('cp-client');
+    sel.innerHTML = '<option value="">Select Client</option>' + 
+        clients.map(c => `<option value="${c.id}">${esc(c.name)} (${esc(c.email)})</option>`).join('');
+}
+
+// ─── Create ───
+async function createClient(e) {
+    e.preventDefault();
+    const d = await fetchAPI('admin?action=clients', {
+        method: 'POST',
+        body: JSON.stringify({
+            name: document.getElementById('cc-name').value,
+            email: document.getElementById('cc-email').value,
+            password: document.getElementById('cc-password').value,
+            company: document.getElementById('cc-company').value,
+            phone: document.getElementById('cc-phone').value,
+            plan_tier: document.getElementById('cc-plan').value,
+        }),
+    });
+    if (d.success) {
+        closeModal('create-client');
+        e.target.reset();
+        loadAdminData();
+    } else {
+        alert(d.message);
+    }
+}
+
+async function createProject(e) {
+    e.preventDefault();
+    const d = await fetchAPI('admin?action=projects', {
+        method: 'POST',
+        body: JSON.stringify({
+            client_id: parseInt(document.getElementById('cp-client').value),
+            name: document.getElementById('cp-name').value,
+            domain: document.getElementById('cp-domain').value,
+            description: document.getElementById('cp-desc').value,
+        }),
+    });
+    if (d.success) {
+        closeModal('create-project');
+        e.target.reset();
+        showApiKey(d.data.api_key, d.data.name);
+        loadAdminData();
+    } else {
+        alert(d.message);
+    }
+}
+
+// ─── Actions ───
+async function toggleClient(id, isActive) {
+    await fetchAPI(`admin?action=client&id=${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ is_active: !isActive }),
+    });
+    loadAdminData();
+}
+
+async function deleteClient(id, name) {
+    if (!confirm(`Delete client "${name}" and ALL their data? This cannot be undone.`)) return;
+    await fetchAPI(`admin?action=client&id=${id}`, { method: 'DELETE' });
+    loadAdminData();
+}
+
+async function deleteProject(id, name) {
+    if (!confirm(`Delete project "${name}" and ALL its analytics data?`)) return;
+    await fetchAPI(`admin?action=project&id=${id}`, { method: 'DELETE' });
+    loadAdminData();
+}
+
+function showApiKey(key, projectName) {
+    document.getElementById('api-key-code').textContent = key;
+    const serverUrl = window.location.origin + window.location.pathname.replace('/admin/', '/').replace('/admin', '/');
+    document.getElementById('tracker-snippet').textContent = 
+        `<script src="${serverUrl}tracker/ar-analytics.js" data-project="${key}"><\/script>`;
+    openModal('api-key');
+}
+
+// ─── Tabs ───
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+    document.getElementById('tab-clients').style.display = tab === 'clients' ? 'block' : 'none';
+    document.getElementById('tab-projects').style.display = tab === 'projects' ? 'block' : 'none';
+}
+
+// ─── Modal ───
+function openModal(name) { document.getElementById('modal-' + name).classList.add('visible'); }
+function closeModal(name) { document.getElementById('modal-' + name).classList.remove('visible'); }
+
+// ─── API ───
+async function fetchAPI(endpoint, options = {}) {
+    const url = API_BASE + 'api/controllers/' + endpoint.split('?')[0] + '.php' + 
+                (endpoint.includes('?') ? '?' + endpoint.split('?')[1] : '');
+    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const r = await fetch(url, { ...options, headers });
+    return r.json();
+}
+
+// ─── Utils ───
+function formatNum(n) { return n >= 1000 ? (n/1000).toFixed(1) + 'K' : n.toString(); }
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+</script>
+</body>
+</html>
