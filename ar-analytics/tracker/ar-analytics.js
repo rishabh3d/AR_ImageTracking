@@ -95,27 +95,18 @@
         };
     }
 
-    // ─── API Communication ───
+    // ─── API Communication (Image Pixel — GET-based) ───
+    // Uses the same technique as Google Analytics: loads a 1x1 transparent GIF
+    // with data encoded in query parameters. No CORS, no POST, works everywhere.
     function sendToAPI(action, data) {
         data.api_key = API_KEY;
-        var url = API_BASE + '/api/controllers/track.php?action=' + action;
-        var payload = JSON.stringify(data);
-
-        // Use text/plain to avoid CORS preflight (InfinityFree blocks OPTIONS requests)
-        // PHP reads from php://input regardless of content-type, so JSON is still parsed
-        if (navigator.sendBeacon) {
-            var blob = new Blob([payload], { type: 'text/plain' });
-            navigator.sendBeacon(url, blob);
-        } else {
-            // Fallback to fetch with no-cors mode (fire-and-forget)
-            fetch(url, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain' },
-                body: payload,
-                keepalive: true,
-            }).catch(function() { /* silently fail */ });
-        }
+        data.action = action;
+        try {
+            var encoded = btoa(JSON.stringify(data));
+            var url = API_BASE + '/api/controllers/pixel.php?d=' + encodeURIComponent(encoded);
+            var img = new Image();
+            img.src = url;
+        } catch(e) { /* silently fail */ }
     }
 
     // ─── Initialization ───
@@ -125,37 +116,37 @@
     let arActivated = false;
     let trackingTimers = {}; // target_id → timestamp for scan duration
 
-    // Start session
+    // Start session (using short keys to keep URL length small)
     const utm = getUTMParams();
     sendToAPI('session', {
-        session_id: sessionId,
-        visitor_id: visitorId,
-        device_type: getDeviceType(),
+        sid: sessionId,
+        vid: visitorId,
+        dt: getDeviceType(),
         os: getOS(),
-        browser: getBrowser(),
-        language: navigator.language || 'en',
-        screen_width: screen.width,
-        screen_height: screen.height,
-        referrer: document.referrer || '',
-        utm_source: utm.utm_source,
-        utm_medium: utm.utm_medium,
-        utm_campaign: utm.utm_campaign,
-        page_url: window.location.href,
+        br: getBrowser(),
+        lang: navigator.language || 'en',
+        sw: screen.width,
+        sh: screen.height,
+        ref: document.referrer || '',
+        us: utm.utm_source,
+        um: utm.utm_medium,
+        uc: utm.utm_campaign,
+        url: window.location.href,
     });
 
     // Log page view event
     sendToAPI('event', {
-        session_id: sessionId,
-        event_type: 'page_view',
-        event_data: { url: window.location.href, title: document.title },
+        sid: sessionId,
+        et: 'page_view',
+        ed: { url: window.location.href, title: document.title },
     });
 
     // ─── Heartbeat (session duration tracking) ───
     let heartbeatTimer = setInterval(function() {
         const duration = Math.round((Date.now() - sessionStart) / 1000);
         sendToAPI('heartbeat', {
-            session_id: sessionId,
-            duration: duration,
+            sid: sessionId,
+            dur: duration,
         });
     }, HEARTBEAT_INTERVAL);
 
@@ -163,7 +154,7 @@
     window.addEventListener('beforeunload', function() {
         clearInterval(heartbeatTimer);
         const duration = Math.round((Date.now() - sessionStart) / 1000);
-        sendToAPI('heartbeat', { session_id: sessionId, duration: duration });
+        sendToAPI('heartbeat', { sid: sessionId, dur: duration });
     });
 
     // ─── Public API for AR Events ───
@@ -175,9 +166,9 @@
          */
         track: function(eventType, eventData) {
             sendToAPI('event', {
-                session_id: sessionId,
-                event_type: eventType,
-                event_data: eventData || {},
+                sid: sessionId,
+                et: eventType,
+                ed: eventData || {},
             });
         },
 
