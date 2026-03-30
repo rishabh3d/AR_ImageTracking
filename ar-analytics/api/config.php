@@ -5,16 +5,16 @@
  */
 
 // ─── Database Settings ───
-define('DB_HOST', 'localhost');          // Hostinger usually uses localhost
-define('DB_NAME', 'ar_analytics');      // Your database name
-define('DB_USER', 'your_db_username');  // From Hostinger hPanel → Databases
-define('DB_PASS', 'your_db_password');  // From Hostinger hPanel → Databases
+define('DB_HOST', 'sql309.infinityfree.com');          // Hostinger usually uses localhost
+define('DB_NAME', 'if0_41513788_my_ar_data');      // Your database name
+define('DB_USER', 'if0_41513788');                  // From Hostinger hPanel → Databases
+define('DB_PASS', 'wyjlNlM5L4m');                  // From Hostinger hPanel → Databases
 define('DB_CHARSET', 'utf8mb4');
 
 // ─── App Settings ───
 define('APP_NAME', 'AR Analytics');
-define('APP_URL', 'https://yoursite.com/ar-analytics'); // Your analytics URL
-define('APP_SECRET', 'CHANGE_THIS_TO_A_RANDOM_64_CHAR_STRING'); // Used for token signing
+define('APP_URL', 'http://myaranalytics.gamer.gd'); // Your analytics URL
+define('APP_SECRET', 'ar_secret_64_prashant_2024_tracker_key'); // Used for token signing
 
 // ─── Session Settings ───
 define('SESSION_LIFETIME', 86400 * 7); // 7 days

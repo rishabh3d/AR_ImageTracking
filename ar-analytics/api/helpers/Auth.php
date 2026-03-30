@@ -53,13 +53,17 @@ class Auth {
      * Returns ['user_id' => ..., 'role' => ...] or null
      */
     public static function getUser() {
-        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        // Try multiple ways to get the header because shared hosts strip it
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+        
         if (empty($header)) {
-            // Also check for token in cookie
+            // Also check for token in browser cookie
             $header = $_COOKIE['ar_analytics_token'] ?? '';
         }
         
+        // Remove 'Bearer ' prefix if present
         $token = str_replace('Bearer ', '', $header);
+
         if (empty($token)) return null;
 
         return self::verifyToken($token);
