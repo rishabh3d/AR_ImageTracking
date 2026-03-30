@@ -98,17 +98,21 @@
     // ─── API Communication ───
     function sendToAPI(action, data) {
         data.api_key = API_KEY;
+        var url = API_BASE + '/api/controllers/track.php?action=' + action;
+        var payload = JSON.stringify(data);
 
-        // Use sendBeacon for reliability (survives page unload)
+        // Use text/plain to avoid CORS preflight (InfinityFree blocks OPTIONS requests)
+        // PHP reads from php://input regardless of content-type, so JSON is still parsed
         if (navigator.sendBeacon) {
-            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-            navigator.sendBeacon(API_BASE + '/api/controllers/track.php?action=' + action, blob);
+            var blob = new Blob([payload], { type: 'text/plain' });
+            navigator.sendBeacon(url, blob);
         } else {
-            // Fallback to fetch
-            fetch(API_BASE + '/api/controllers/track.php?action=' + action, {
+            // Fallback to fetch with no-cors mode (fire-and-forget)
+            fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: payload,
                 keepalive: true,
             }).catch(function() { /* silently fail */ });
         }
