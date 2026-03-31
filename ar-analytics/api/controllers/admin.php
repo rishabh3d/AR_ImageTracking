@@ -14,10 +14,11 @@ $user = Auth::requireAuth('admin');
 $db = Database::getInstance();
 
 // Quick Migration: Add password_plain if missing
-$hasColumn = $db->scalar("SHOW COLUMNS FROM clients LIKE 'password_plain'");
-if (!$hasColumn) {
-    try { $db->execute("ALTER TABLE clients ADD COLUMN password_plain VARCHAR(100) DEFAULT '' AFTER password_hash"); } catch (Exception $e) {}
-}
+$hasColC = $db->scalar("SHOW COLUMNS FROM clients LIKE 'password_plain'");
+if (!$hasColC) { try { $db->execute("ALTER TABLE clients ADD COLUMN password_plain VARCHAR(100) DEFAULT '' AFTER password_hash"); } catch (Exception $e) {} }
+
+$hasColA = $db->scalar("SHOW COLUMNS FROM admins LIKE 'password_plain'");
+if (!$hasColA) { try { $db->execute("ALTER TABLE admins ADD COLUMN password_plain VARCHAR(100) DEFAULT '' AFTER password_hash"); } catch (Exception $e) {} }
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
@@ -285,7 +286,7 @@ function deleteProject($db, $id) {
 // ═════════════════════════════════════════
 
 function listAdmins($db) {
-    $admins = $db->query("SELECT id, username, email, created_at FROM admins ORDER BY id ASC");
+    $admins = $db->query("SELECT id, username, email, password_plain, created_at FROM admins ORDER BY id ASC");
     Response::success($admins);
 }
 
@@ -307,8 +308,8 @@ function createAdmin($db) {
     }
 
     $adminId = $db->insert(
-        "INSERT INTO admins (username, email, password_hash) VALUES (?, ?, ?)",
-        [$username, $email, Auth::hashPassword($password)]
+        "INSERT INTO admins (username, email, password_hash, password_plain) VALUES (?, ?, ?, ?)",
+        [$username, $email, Auth::hashPassword($password), $password]
     );
 
     Response::success(['id' => $adminId, 'username' => $username], 'Admin created', 201);

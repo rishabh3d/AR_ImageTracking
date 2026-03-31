@@ -309,6 +309,7 @@
                     <tr>
                         <th>Username</th>
                         <th>Email</th>
+                        <th>Password</th>
                         <th>Created</th>
                         <th>Actions</th>
                     </tr>
@@ -504,6 +505,12 @@ function renderAdmins(data) {
         <tr>
             <td><strong>${esc(a.username)}</strong></td>
             <td>${esc(a.email || '-')}</td>
+            <td>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <code id="apw-${a.id}">${esc(a.password_plain ? '••••••••' : '******')}</code>
+                    ${a.password_plain ? `<button class="btn btn-outline" style="padding:2px 8px;font-size:10px" onclick="togglePassDisplayAdmin(${a.id}, '${esc(a.password_plain)}')">Show</button>` : ''}
+                </div>
+            </td>
             <td>${new Date(a.created_at).toLocaleDateString()}</td>
             <td class="actions-cell">
                 <button class="btn btn-danger btn-sm" onclick="deleteAdmin(${a.id}, '${esc(a.username)}')">Delete</button>
@@ -519,7 +526,12 @@ function renderClients(data) {
         <tr>
             <td><strong>${esc(c.name)}</strong></td>
             <td>${esc(c.email)}</td>
-            <td class="api-key-cell" style="color:var(--text-primary)"><code>${esc(c.password_plain || '******')}</code></td>
+            <td class="api-key-cell">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <code id="pw-${c.id}">${esc(c.password_plain ? '••••••••' : '******')}</code>
+                    ${c.password_plain ? `<button class="btn btn-outline" style="padding:2px 8px;font-size:10px" onclick="togglePassDisplay(${c.id}, '${esc(c.password_plain)}')">Show</button>` : ''}
+                </div>
+            </td>
             <td>${esc(c.company || '-')}</td>
             <td><span class="badge badge-${c.plan_tier}">${c.plan_tier}</span></td>
             <td>${formatNum(c.total_views || 0)}</td>
@@ -706,6 +718,30 @@ async function fetchAPI(endpoint, options = {}) {
     if (token) headers['Authorization'] = 'Bearer ' + token;
     const r = await fetch(url, { ...options, headers });
     return r.json();
+}
+
+function togglePassDisplay(id, pass) {
+    const el = document.getElementById('pw-' + id);
+    const btn = el.nextElementSibling;
+    if (el.textContent.includes('•')) {
+        el.textContent = pass;
+        btn.textContent = 'Hide';
+    } else {
+        el.textContent = '••••••••';
+        btn.textContent = 'Show';
+    }
+}
+
+function togglePassDisplayAdmin(id, pass) {
+    const el = document.getElementById('apw-' + id);
+    const btn = el.nextElementSibling;
+    if (el.textContent.includes('•')) {
+        el.textContent = pass;
+        btn.textContent = 'Hide';
+    } else {
+        el.textContent = '••••••••';
+        btn.textContent = 'Show';
+    }
 }
 
 // ─── Utils ───
