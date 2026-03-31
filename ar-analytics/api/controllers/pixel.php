@@ -25,14 +25,22 @@ if (empty($encoded)) {
     exit;
 }
 
+// Debug logging
+$debug_file = __DIR__ . '/debug.txt';
+$log_data = date('[Y-m-d H:i:s] ') . "Request: " . $_SERVER['REQUEST_URI'] . " | IP: " . $_SERVER['REMOTE_ADDR'] . "\n";
+file_put_contents($debug_file, $log_data, FILE_APPEND);
+
 // Decode the base64-encoded JSON data
 $json = base64_decode($encoded);
 $input = json_decode($json, true);
 
 if (!$input) {
+    file_put_contents($debug_file, "ERROR: Failed to decode JSON: " . $json . "\n", FILE_APPEND);
     servePixel();
     exit;
 }
+
+file_put_contents($debug_file, "SUCCESS: Decoded data for project key: " . ($input['api_key'] ?? 'MISSING') . "\n", FILE_APPEND);
 
 // Load dependencies
 require_once __DIR__ . '/../helpers/Database.php';
@@ -79,6 +87,25 @@ function handlePixelSession($db, $project, $input) {
     
     if (empty($sessionId) || empty($visitorId)) return;
 
+    // Support ultra-short or standard keys
+    $ua = $input['ua'] ?? $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+    $deviceType = $input['dt'] ?? (strpos(strtolower($ua), 'mobile') !== false ? 'mobile' : 'desktop');
+    $os = $input['os'] ?? 'Unknown';
+    $browser = $input['br'] ?? 'Unknown';
+
+    // Simple UA parsing if keys are missing
+    if ($os === 'Unknown' || $browser === 'Unknown') {
+        if (strpos($ua, 'iPhone') !== false || strpos($ua, 'iPad') !== false) $os = 'iOS';
+        else if (strpos($ua, 'Android') !== false) $os = 'Android';
+        else if (strpos($ua, 'Windows') !== false) $os = 'Windows';
+        else if (strpos($ua, 'Macintosh') !== false) $os = 'macOS';
+
+        if (strpos($ua, 'Chrome') !== false) $browser = 'Chrome';
+        else if (strpos($ua, 'Safari') !== false) $browser = 'Safari';
+        else if (strpos($ua, 'Firefox') !== false) $browser = 'Firefox';
+        else if (strpos($ua, 'Edg') !== false) $browser = 'Edge';
+    }
+
     // Check if session already exists
     $existing = $db->queryOne(
         "SELECT id FROM sessions WHERE project_id = ? AND session_id = ?",
@@ -113,9 +140,9 @@ function handlePixelSession($db, $project, $input) {
             $sessionId,
             $visitorId,
             $isNewVisitor ? 1 : 0,
-            $input['dt'] ?? 'unknown',
-            $input['os'] ?? 'unknown',
-            $input['br'] ?? 'unknown',
+            $deviceType,
+            $os,
+            $browser,
             $geo['country'] ?? 'Unknown',
             $geo['city'] ?? 'Unknown',
             $input['lang'] ?? 'en',
@@ -153,7 +180,8 @@ function handlePixelEvent($db, $project, $input) {
 
 function handlePixelHeartbeat($db, $project, $input) {
     $sessionId = $input['sid'] ?? '';
-    $duration = intval($input['dur'] ?? 0);
+    // Support both 'dur' and 'duration'
+    $duration = intval($input['dur'] ?? $input['duration'] ?? 0);
     
     if (empty($sessionId)) return;
 
