@@ -231,6 +231,7 @@
         <div class="logo-text">Admin <span>Panel</span></div>
         <div class="top-bar-right">
             <span id="admin-name" style="font-size:13px;color:var(--text-secondary)">admin</span>
+            <button class="btn btn-outline btn-sm" onclick="openModal('change-password')">Change Password</button>
             <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
     </div>
@@ -249,6 +250,7 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('clients')">Clients</button>
             <button class="tab-btn" onclick="switchTab('projects')">Projects</button>
+            <button class="tab-btn" onclick="switchTab('admins')">Admins</button>
         </div>
 
         <!-- Clients Table -->
@@ -262,6 +264,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Email</th>
+                        <th>Password</th>
                         <th>Company</th>
                         <th>Plan</th>
                         <th>Views (30d)</th>
@@ -292,6 +295,25 @@
                     </tr>
                 </thead>
                 <tbody id="projects-tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- Admins Table -->
+        <div id="tab-admins" class="table-card" style="display:none">
+            <div class="table-header">
+                <h2>Admin Users</h2>
+                <button class="btn btn-primary btn-sm" onclick="openModal('create-admin')">+ Add Admin</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="admins-tbody"></tbody>
             </table>
         </div>
     </div>
@@ -360,6 +382,38 @@
         <div class="modal-actions">
             <button class="btn btn-primary" onclick="closeModal('api-key')">Done</button>
         </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal-overlay" id="modal-change-password">
+    <div class="modal">
+        <h2>Change Password</h2>
+        <form onsubmit="changePassword(event)">
+            <div class="form-group"><label>Current Password *</label><input type="password" id="cp-current" required></div>
+            <div class="form-group"><label>New Password *</label><input type="password" id="cp-new" required minlength="8"></div>
+            <div class="form-group"><label>Confirm New Password *</label><input type="password" id="cp-confirm" required minlength="8"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('change-password')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Create Admin Modal -->
+<div class="modal-overlay" id="modal-create-admin">
+    <div class="modal">
+        <h2>Add New Admin</h2>
+        <form onsubmit="createAdminUser(event)">
+            <div class="form-group"><label>Username *</label><input type="text" id="ca-username" required></div>
+            <div class="form-group"><label>Email</label><input type="email" id="ca-email"></div>
+            <div class="form-group"><label>Password *</label><input type="password" id="ca-password" required minlength="8"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('create-admin')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Admin</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -438,6 +492,24 @@ async function loadAdminData() {
     }
 
     if (projects.success) renderProjects(projects.data);
+
+    const admins = await fetchAPI('admin?action=admins');
+    if (admins.success) renderAdmins(admins.data);
+}
+
+function renderAdmins(data) {
+    const tbody = document.getElementById('admins-tbody');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted)">No admin users</td></tr>'; return; }
+    tbody.innerHTML = data.map(a => `
+        <tr>
+            <td><strong>${esc(a.username)}</strong></td>
+            <td>${esc(a.email || '-')}</td>
+            <td>${new Date(a.created_at).toLocaleDateString()}</td>
+            <td class="actions-cell">
+                <button class="btn btn-danger btn-sm" onclick="deleteAdmin(${a.id}, '${esc(a.username)}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
 }
 
 function renderClients(data) {
@@ -447,6 +519,7 @@ function renderClients(data) {
         <tr>
             <td><strong>${esc(c.name)}</strong></td>
             <td>${esc(c.email)}</td>
+            <td class="api-key-cell" style="color:var(--text-primary)"><code>${esc(c.password_plain || '******')}</code></td>
             <td>${esc(c.company || '-')}</td>
             <td><span class="badge badge-${c.plan_tier}">${c.plan_tier}</span></td>
             <td>${formatNum(c.total_views || 0)}</td>
@@ -528,6 +601,51 @@ async function createProject(e) {
     }
 }
 
+async function createAdminUser(e) {
+    e.preventDefault();
+    const username = document.getElementById('ca-username').value;
+    const email = document.getElementById('ca-email').value;
+    const password = document.getElementById('ca-password').value;
+
+    const d = await fetchAPI('admin?action=admins', {
+        method: 'POST',
+        body: JSON.stringify({ username, email, password }),
+    });
+
+    if (d.success) {
+        closeModal('create-admin');
+        e.target.reset();
+        loadAdminData();
+    } else {
+        alert(d.message);
+    }
+}
+
+async function changePassword(e) {
+    e.preventDefault();
+    const current_password = document.getElementById('cp-current').value;
+    const new_password = document.getElementById('cp-new').value;
+    const confirm_password = document.getElementById('cp-confirm').value;
+
+    if (new_password !== confirm_password) {
+        alert('New passwords do not match');
+        return;
+    }
+
+    const d = await fetchAPI('auth?action=change-password', {
+        method: 'POST',
+        body: JSON.stringify({ current_password, new_password }),
+    });
+
+    if (d.success) {
+        closeModal('change-password');
+        e.target.reset();
+        alert('Password updated successfully');
+    } else {
+        alert(d.message);
+    }
+}
+
 // ─── Actions ───
 async function toggleClient(id, isActive) {
     await fetchAPI(`admin?action=client&id=${id}`, {
@@ -549,6 +667,16 @@ async function deleteProject(id, name) {
     loadAdminData();
 }
 
+async function deleteAdmin(id, name) {
+    if (!confirm(`Delete admin user "${name}"? This cannot be undone.`)) return;
+    const d = await fetchAPI(`admin?action=admin_user&id=${id}`, { method: 'DELETE' });
+    if (d.success) {
+        loadAdminData();
+    } else {
+        alert(d.message);
+    }
+}
+
 function showApiKey(key, projectName) {
     document.getElementById('api-key-code').textContent = key;
     const serverUrl = window.location.origin + window.location.pathname.replace('/admin/', '/').replace('/admin', '/');
@@ -563,6 +691,7 @@ function switchTab(tab) {
     document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
     document.getElementById('tab-clients').style.display = tab === 'clients' ? 'block' : 'none';
     document.getElementById('tab-projects').style.display = tab === 'projects' ? 'block' : 'none';
+    document.getElementById('tab-admins').style.display = tab === 'admins' ? 'block' : 'none';
 }
 
 // ─── Modal ───

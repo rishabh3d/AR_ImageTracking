@@ -13,6 +13,12 @@ Response::json();
 $user = Auth::requireAuth('admin');
 $db = Database::getInstance();
 
+// Quick Migration: Add password_plain if missing
+$hasColumn = $db->scalar("SHOW COLUMNS FROM clients LIKE 'password_plain'");
+if (!$hasColumn) {
+    try { $db->execute("ALTER TABLE clients ADD COLUMN password_plain VARCHAR(100) DEFAULT '' AFTER password_hash"); } catch (Exception $e) {}
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
@@ -45,6 +51,20 @@ switch ($action) {
         else Response::error('Method not allowed', 405);
         break;
 
+    // ─── Admin Management ───
+    case 'admins':
+        if ($method === 'GET') listAdmins($db);
+        elseif ($method === 'POST') createAdmin($db);
+        else Response::error('Method not allowed', 405);
+        break;
+    case 'admin_user': // Renamed from 'admin' to avoid conflict with potential roles or names
+        $id = intval($_GET['id'] ?? 0);
+        if ($method === 'GET') getAdmin($db, $id);
+        elseif ($method === 'PUT') updateAdmin($db, $id);
+        elseif ($method === 'DELETE') deleteAdmin($db, $id);
+        else Response::error('Method not allowed', 405);
+        break;
+
     // ─── Global Overview ───
     case 'overview':
         adminOverview($db);
@@ -60,7 +80,7 @@ switch ($action) {
 
 function listClients($db) {
     $clients = $db->query(
-        "SELECT c.id, c.name, c.email, c.company, c.phone, c.plan_tier, c.is_active, 
+        "SELECT c.id, c.name, c.email, c.password_plain, c.company, c.phone, c.plan_tier, c.is_active, 
                 c.created_at, c.last_login,
                 COUNT(DISTINCT p.id) as project_count,
                 COALESCE(SUM(stats.total_views), 0) as total_views
@@ -106,9 +126,9 @@ function createClient($db) {
     $maxViews = $planLimits[$plan]['max_views'] ?? 1000;
 
     $clientId = $db->insert(
-        "INSERT INTO clients (name, email, password_hash, company, phone, plan_tier, max_views_per_month) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [$name, $email, Auth::hashPassword($password), $company, $phone, $plan, $maxViews]
+        "INSERT INTO clients (name, email, password_hash, password_plain, company, phone, plan_tier, max_views_per_month) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [$name, $email, Auth::hashPassword($password), $password, $company, $phone, $plan, $maxViews]
     );
 
     Response::success(['id' => $clientId, 'email' => $email], 'Client created', 201);
@@ -116,7 +136,7 @@ function createClient($db) {
 
 function getClient($db, $id) {
     $client = $db->queryOne(
-        "SELECT id, name, email, company, phone, plan_tier, max_views_per_month, is_active, 
+        "SELECT id, name, email, password_plain, company, phone, plan_tier, max_views_per_month, is_active, 
                 created_at, last_login FROM clients WHERE id = ?",
         [$id]
     );
@@ -150,6 +170,8 @@ function updateClient($db, $id) {
     if (isset($input['password']) && !empty($input['password'])) {
         $fields[] = "password_hash = ?";
         $params[] = Auth::hashPassword($input['password']);
+        $fields[] = "password_plain = ?";
+        $params[] = $input['password'];
     }
 
     if (empty($fields)) {
@@ -257,6 +279,83 @@ function deleteProject($db, $id) {
 // ═════════════════════════════════════════
 // Admin Overview
 // ═════════════════════════════════════════
+
+// ═════════════════════════════════════════
+// Admin Management Functions
+// ═════════════════════════════════════════
+
+function listAdmins($db) {
+    $admins = $db->query("SELECT id, username, email, created_at FROM admins ORDER BY id ASC");
+    Response::success($admins);
+}
+
+function createAdmin($db) {
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    $username = trim($input['username'] ?? '');
+    $email = trim($input['email'] ?? '');
+    $password = $input['password'] ?? '';
+
+    if (empty($username) || empty($password)) {
+        Response::error('Username and password are required', 400);
+    }
+
+    // Check duplicate username
+    $existing = $db->scalar("SELECT COUNT(*) FROM admins WHERE username = ?", [$username]);
+    if ($existing > 0) {
+        Response::error('Username already exists', 409);
+    }
+
+    $adminId = $db->insert(
+        "INSERT INTO admins (username, email, password_hash) VALUES (?, ?, ?)",
+        [$username, $email, Auth::hashPassword($password)]
+    );
+
+    Response::success(['id' => $adminId, 'username' => $username], 'Admin created', 201);
+}
+
+function getAdmin($db, $id) {
+    $admin = $db->queryOne("SELECT id, username, email, created_at FROM admins WHERE id = ?", [$id]);
+    if (!$admin) Response::error('Admin not found', 404);
+    Response::success($admin);
+}
+
+function updateAdmin($db, $id) {
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    $fields = [];
+    $params = [];
+
+    if (isset($input['username'])) { $fields[] = "username = ?"; $params[] = trim($input['username']); }
+    if (isset($input['email'])) { $fields[] = "email = ?"; $params[] = trim($input['email']); }
+    
+    if (isset($input['password']) && !empty($input['password'])) {
+        $fields[] = "password_hash = ?";
+        $params[] = Auth::hashPassword($input['password']);
+    }
+
+    if (empty($fields)) Response::error('No fields to update', 400);
+
+    $params[] = $id;
+    $db->execute("UPDATE admins SET " . implode(', ', $fields) . " WHERE id = ?", $params);
+    Response::success(null, 'Admin updated');
+}
+
+function deleteAdmin($db, $id) {
+    // Prevent self-deletion or ensure at least one admin remains
+    $count = $db->scalar("SELECT COUNT(*) FROM admins");
+    if ($count <= 1) {
+        Response::error('Cannot delete the last admin account', 403);
+    }
+
+    $currentUser = Auth::requireAuth('admin');
+    if ($id === intval($currentUser['user_id'])) {
+        Response::error('You cannot delete your own admin account while logged in', 403);
+    }
+
+    $db->execute("DELETE FROM admins WHERE id = ?", [$id]);
+    Response::success(null, 'Admin deleted');
+}
 
 function adminOverview($db) {
     $totalClients = $db->scalar("SELECT COUNT(*) FROM clients");
