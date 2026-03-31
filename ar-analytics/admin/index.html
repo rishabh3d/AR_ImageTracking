@@ -781,8 +781,8 @@ async function handleResetPassword(e) {
     const id = document.getElementById('reset-id').value;
     const password = document.getElementById('reset-new-pass').value;
     
-    // endpoint matches the list action (clients or admins)
-    const endpoint = (type === 'client' ? 'clients' : 'admins') + '&id=' + id;
+    // match singular endpoints (client, admin_user) for PUT actions
+    const endpoint = (type === 'client' ? 'client' : 'admin_user') + '&id=' + id;
     
     const d = await fetchAPI('admin?action=' + endpoint, {
         method: 'PUT',
