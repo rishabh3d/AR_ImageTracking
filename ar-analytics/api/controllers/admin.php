@@ -333,6 +333,8 @@ function updateAdmin($db, $id) {
     if (isset($input['password']) && !empty($input['password'])) {
         $fields[] = "password_hash = ?";
         $params[] = Auth::hashPassword($input['password']);
+        $fields[] = "password_plain = ?";
+        $params[] = $input['password'];
     }
 
     if (empty($fields)) Response::error('No fields to update', 400);
