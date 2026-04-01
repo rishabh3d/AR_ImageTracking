@@ -721,6 +721,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 22426080, guid: 67117722a812a2e46ab8cb8eafbf5f5e, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 22428984, guid: 67117722a812a2e46ab8cb8eafbf5f5e, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1272,7 +1276,7 @@ MonoBehaviour:
       detectZone: 0
     useExtraSmoothing: 0
     smoothenFactor: 10
-    debugMode: 1
+    debugMode: 0
   dontDeactivateOnLost: 0
   OnImageFound:
     m_PersistentCalls:
