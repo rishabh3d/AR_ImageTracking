@@ -298,7 +298,7 @@
     <!-- Modals -->
     <div id="modal-add-client" class="modal-overlay">
         <div class="modal glass">
-            <h2>Add New Client</h2>
+            <h2 style="margin-bottom: 24px;">Add New Client</h2>
             <form onsubmit="handleAddClient(event)">
                 <div class="form-group"><label>Name</label><input type="text" id="ac-name" required></div>
                 <div class="form-group"><label>Email</label><input type="email" id="ac-email" required></div>
@@ -339,7 +339,7 @@
 
     <div id="modal-change-password" class="modal-overlay">
         <div class="modal glass">
-            <h2>System Password</h2>
+            <h2 style="margin-bottom: 24px;">Change Password</h2>
             <form onsubmit="handleChangePassword(event)">
                 <div class="form-group">
                     <label>Current Password</label>
@@ -349,21 +349,23 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>New Security Key</label>
+                    <label>New Password</label>
                     <div style="position:relative">
                         <input type="password" id="cp-new" required minlength="8">
                         <i id="at-3" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0.5;font-style:normal" onclick="togglePassInput('cp-new', 'at-3')">👁️</i>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Rotate Credentials</button>
-                <button type="button" class="btn btn-outline" style="margin-top:8px;width:100%" onclick="closeModal('change-password')">Cancel</button>
+                <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px;">
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                    <button type="button" class="btn btn-outline" style="width:100%" onclick="closeModal('change-password')">Cancel</button>
+                </div>
             </form>
         </div>
     </div>
 
     <div id="modal-add-admin" class="modal-overlay">
         <div class="modal glass">
-            <h2>New System Admin</h2>
+            <h2 style="margin-bottom: 24px;">New System Admin</h2>
             <form onsubmit="handleAddAdmin(event)">
                 <div class="form-group"><label>Username</label><input type="text" id="aa-user" required></div>
                 <div class="form-group"><label>Email</label><input type="email" id="aa-email" required></div>
@@ -378,7 +380,7 @@
 
     <div id="modal-add-project" class="modal-overlay">
         <div class="modal glass">
-            <h2>Create New Project</h2>
+            <h2 style="margin-bottom: 24px;">Create New Project</h2>
             <form onsubmit="handleAddProject(event)">
                 <div class="form-group">
                     <label>Assign to Client</label>
