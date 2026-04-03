@@ -180,7 +180,7 @@
             <ul class="nav-list">
                 <li><a href="#" class="nav-link active" onclick="switchTab('clients')"><i>👥</i> <span>Clients</span></a></li>
                 <li><a href="#" class="nav-link" onclick="switchTab('projects')"><i>📁</i> <span>Projects</span></a></li>
-                <li><a href="#" class="nav-link" onclick="switchTab('admins')"><i>🛡️</i> <span>Administrators</span></a></li>
+                <li id="nav-item-admins"><a href="#" class="nav-link" onclick="switchTab('admins')"><i>🛡️</i> <span>Administrators</span></a></li>
                 <li><a href="#" class="nav-link" onclick="openModal('change-password')"><i>🔑</i> <span>Security</span></a></li>
             </ul>
             <div style="position:absolute;bottom:32px;left:32px;right:32px">
@@ -406,7 +406,7 @@
             if (state.token) {
                 try {
                     const res = await fetchAPI('auth?action=me');
-                    if (res.success && res.data.role === 'admin') {
+                    if (res.success && (res.data.role === 'admin' || res.data.role === 'super_admin')) {
                         state.admin = res.data;
                         showAdminHub();
                     } else { handleLogout(); }
@@ -445,17 +445,31 @@
         function showAdminHub() {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('admin-screen').style.display = 'block';
-            document.getElementById('admin-user-display').textContent = state.admin.username;
+            let roleBadge = state.admin.role === 'super_admin' ? ' <span style="font-size:10px;background:rgba(139, 92, 246, 0.2);color:var(--accent-purple);border:1px solid var(--accent-purple);padding:2px 6px;border-radius:12px;margin-left:8px;vertical-align:middle">SUPER ADMIN</span>' : '';
+            document.getElementById('admin-user-display').innerHTML = esc(state.admin.username) + roleBadge;
+            if (state.admin.role !== 'super_admin') {
+                const navAdmins = document.getElementById('nav-item-admins');
+                if (navAdmins) navAdmins.style.display = 'none';
+            }
             loadData();
         }
 
         async function loadData() {
-            const [overview, clients, projects, admins] = await Promise.all([
+            const fetches = [
                 fetchAPI('admin?action=overview'),
                 fetchAPI('admin?action=clients'),
-                fetchAPI('admin?action=projects'),
-                fetchAPI('admin?action=admins')
-            ]);
+                fetchAPI('admin?action=projects')
+            ];
+            
+            if (state.admin.role === 'super_admin') {
+                fetches.push(fetchAPI('admin?action=admins'));
+            }
+
+            const results = await Promise.all(fetches);
+            const overview = results[0];
+            const clients = results[1];
+            const projects = results[2];
+            const admins = state.admin.role === 'super_admin' ? results[3] : { success: false };
 
             if (overview.success) {
                 const o = overview.data;

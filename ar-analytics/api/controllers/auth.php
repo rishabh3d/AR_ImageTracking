@@ -98,8 +98,17 @@ function handleAdminLogin() {
     }
 
     $db = Database::getInstance();
+    // Quick Migration
+    $hasColRole = $db->scalar("SHOW COLUMNS FROM admins LIKE 'role'");
+    if (!$hasColRole) { 
+        try { 
+            $db->execute("ALTER TABLE admins ADD COLUMN role VARCHAR(20) DEFAULT 'admin' AFTER email"); 
+            $db->execute("UPDATE admins SET role = 'super_admin' ORDER BY id ASC LIMIT 1");
+        } catch (Exception $e) {} 
+    }
+
     $admin = $db->queryOne(
-        "SELECT id, username, password_hash FROM admins WHERE username = ?",
+        "SELECT id, username, password_hash, role FROM admins WHERE username = ?",
         [$username]
     );
 
@@ -107,14 +116,15 @@ function handleAdminLogin() {
         Response::error('Invalid credentials', 401);
     }
 
-    $token = Auth::generateToken($admin['id'], 'admin');
+    $role = !empty($admin['role']) ? $admin['role'] : 'admin';
+    $token = Auth::generateToken($admin['id'], $role);
 
     Response::success([
         'token' => $token,
         'user' => [
             'id' => $admin['id'],
             'username' => $admin['username'],
-            'role' => 'admin',
+            'role' => $role,
         ],
     ]);
 }
@@ -126,9 +136,9 @@ function handleMe() {
     $user = Auth::requireAuth();
     $db = Database::getInstance();
 
-    if ($user['role'] === 'admin') {
-        $admin = $db->queryOne("SELECT id, username, email FROM admins WHERE id = ?", [$user['user_id']]);
-        $admin['role'] = 'admin';
+    if ($user['role'] === 'admin' || $user['role'] === 'super_admin') {
+        $admin = $db->queryOne("SELECT id, username, email, role FROM admins WHERE id = ?", [$user['user_id']]);
+        $admin['role'] = !empty($admin['role']) ? $admin['role'] : 'admin';
         Response::success($admin);
     } else {
         $client = $db->queryOne(
@@ -164,7 +174,7 @@ function handleChangePassword() {
 
     $db = Database::getInstance();
     
-    if ($user['role'] === 'admin') {
+    if ($user['role'] === 'admin' || $user['role'] === 'super_admin') {
         $record = $db->queryOne("SELECT password_hash FROM admins WHERE id = ?", [$user['user_id']]);
         if (!Auth::verifyPassword($currentPassword, $record['password_hash'])) {
             Response::error('Current password is incorrect', 401);

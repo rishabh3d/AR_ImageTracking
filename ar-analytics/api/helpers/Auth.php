@@ -77,8 +77,14 @@ class Auth {
         if (!$user) {
             Response::error('Unauthorized', 401);
         }
-        if ($requiredRole && $user['role'] !== $requiredRole) {
-            Response::error('Forbidden', 403);
+        if ($requiredRole) {
+            if (is_array($requiredRole)) {
+                if (!in_array($user['role'], $requiredRole)) {
+                    Response::error('Forbidden', 403);
+                }
+            } else if ($user['role'] !== $requiredRole) {
+                Response::error('Forbidden', 403);
+            }
         }
         return $user;
     }

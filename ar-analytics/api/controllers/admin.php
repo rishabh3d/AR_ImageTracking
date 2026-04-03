@@ -10,8 +10,17 @@ require_once __DIR__ . '/../helpers/Response.php';
 Response::cors();
 Response::json();
 
-$user = Auth::requireAuth('admin');
+$user = Auth::requireAuth(['admin', 'super_admin']);
 $db = Database::getInstance();
+
+// Quick Migration: Add role if missing
+$hasColRole = $db->scalar("SHOW COLUMNS FROM admins LIKE 'role'");
+if (!$hasColRole) { 
+    try { 
+        $db->execute("ALTER TABLE admins ADD COLUMN role VARCHAR(20) DEFAULT 'admin' AFTER email"); 
+        $db->execute("UPDATE admins SET role = 'super_admin' ORDER BY id ASC LIMIT 1");
+    } catch (Exception $e) {} 
+}
 
 // Quick Migration: Add password_plain if missing
 $hasColC = $db->scalar("SHOW COLUMNS FROM clients LIKE 'password_plain'");
@@ -54,11 +63,13 @@ switch ($action) {
 
     // ─── Admin Management ───
     case 'admins':
+        if ($user['role'] !== 'super_admin') Response::error('Forbidden: Super Admin access required', 403);
         if ($method === 'GET') listAdmins($db);
         elseif ($method === 'POST') createAdmin($db);
         else Response::error('Method not allowed', 405);
         break;
     case 'admin_user': // Renamed from 'admin' to avoid conflict with potential roles or names
+        if ($user['role'] !== 'super_admin') Response::error('Forbidden: Super Admin access required', 403);
         $id = intval($_GET['id'] ?? 0);
         if ($method === 'GET') getAdmin($db, $id);
         elseif ($method === 'PUT') updateAdmin($db, $id);
@@ -286,7 +297,7 @@ function deleteProject($db, $id) {
 // ═════════════════════════════════════════
 
 function listAdmins($db) {
-    $admins = $db->query("SELECT id, username, email, password_plain, created_at FROM admins ORDER BY id ASC");
+    $admins = $db->query("SELECT id, username, email, role, password_plain, created_at FROM admins ORDER BY id ASC");
     Response::success($admins);
 }
 
@@ -296,6 +307,7 @@ function createAdmin($db) {
     $username = trim($input['username'] ?? '');
     $email = trim($input['email'] ?? '');
     $password = $input['password'] ?? '';
+    $role = trim($input['role'] ?? 'admin');
 
     if (empty($username) || empty($password)) {
         Response::error('Username and password are required', 400);
@@ -308,15 +320,15 @@ function createAdmin($db) {
     }
 
     $adminId = $db->insert(
-        "INSERT INTO admins (username, email, password_hash, password_plain) VALUES (?, ?, ?, ?)",
-        [$username, $email, Auth::hashPassword($password), $password]
+        "INSERT INTO admins (username, email, password_hash, password_plain, role) VALUES (?, ?, ?, ?, ?)",
+        [$username, $email, Auth::hashPassword($password), $password, $role]
     );
 
     Response::success(['id' => $adminId, 'username' => $username], 'Admin created', 201);
 }
 
 function getAdmin($db, $id) {
-    $admin = $db->queryOne("SELECT id, username, email, created_at FROM admins WHERE id = ?", [$id]);
+    $admin = $db->queryOne("SELECT id, username, email, role, created_at FROM admins WHERE id = ?", [$id]);
     if (!$admin) Response::error('Admin not found', 404);
     Response::success($admin);
 }
@@ -329,6 +341,7 @@ function updateAdmin($db, $id) {
 
     if (isset($input['username'])) { $fields[] = "username = ?"; $params[] = trim($input['username']); }
     if (isset($input['email'])) { $fields[] = "email = ?"; $params[] = trim($input['email']); }
+    if (isset($input['role'])) { $fields[] = "role = ?"; $params[] = trim($input['role']); }
     
     if (isset($input['password']) && !empty($input['password'])) {
         $fields[] = "password_hash = ?";
@@ -351,7 +364,7 @@ function deleteAdmin($db, $id) {
         Response::error('Cannot delete the last admin account', 403);
     }
 
-    $currentUser = Auth::requireAuth('admin');
+    $currentUser = Auth::requireAuth(['admin', 'super_admin']);
     if ($id === intval($currentUser['user_id'])) {
         Response::error('You cannot delete your own admin account while logged in', 403);
     }
