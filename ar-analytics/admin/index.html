@@ -304,6 +304,7 @@
             <form onsubmit="handleAddClient(event)">
                 <div class="form-group"><label>Name</label><input type="text" id="ac-name" required></div>
                 <div class="form-group"><label>Email</label><input type="email" id="ac-email" required></div>
+                <div class="form-group"><label>Company / Organization (Optional)</label><input type="text" id="ac-company"></div>
                 <div class="form-group"><label>Password</label><input type="password" id="ac-pass" required></div>
                 <div class="form-group"><label>Plan Tier</label><select id="ac-plan"><option value="free">Free</option><option value="pro">Pro</option><option value="business">Business</option></select></div>
                 <div style="display:flex;gap:12px;margin-top:24px">
@@ -662,7 +663,7 @@
 
         async function handleAddClient(e) {
             e.preventDefault();
-            const res = await fetchAPI('admin?action=clients', { method: 'POST', body: JSON.stringify({ name: document.getElementById('ac-name').value, email: document.getElementById('ac-email').value, password: document.getElementById('ac-pass').value, plan_tier: document.getElementById('ac-plan').value }) });
+            const res = await fetchAPI('admin?action=clients', { method: 'POST', body: JSON.stringify({ name: document.getElementById('ac-name').value, email: document.getElementById('ac-email').value, company: document.getElementById('ac-company').value, password: document.getElementById('ac-pass').value, plan_tier: document.getElementById('ac-plan').value }) });
             if (res.success) { closeModal('add-client'); e.target.reset(); loadData(); showToast('Client provisioned', 'success'); } else showToast(res.message, 'error');
         }
 
