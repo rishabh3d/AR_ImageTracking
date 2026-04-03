@@ -221,20 +221,21 @@
             <div id="tab-clients" class="tab-pane">
                 <div class="card glass animate-fade">
                     <div class="card-header">
-                        <div class="card-title">Client Directory</div>
+                        <div class="card-title">Clients</div>
                         <button class="btn btn-primary btn-sm" style="width:auto" onclick="openModal('add-client')">+ Add Client</button>
                     </div>
                     <div class="table-responsive">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Client / Company</th>
-                                    <th>Email</th>
-                                    <th>Password</th>
-                                    <th>Plan</th>
-                                    <th>Usage (30d)</th>
-                                    <th>Status</th>
-                                    <th style="text-align:right">Management</th>
+                                    <th>NAME</th>
+                                    <th>EMAIL</th>
+                                    <th>PASSWORD</th>
+                                    <th>COMPANY</th>
+                                    <th>PLAN</th>
+                                    <th>VIEWS (30D)</th>
+                                    <th>STATUS</th>
+                                    <th style="padding-right:24px;text-align:right">ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody id="clients-tbody"></tbody>
@@ -254,12 +255,13 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Project Name</th>
-                                    <th>Owner</th>
-                                    <th>Domain / Environment</th>
-                                    <th>Sessions</th>
-                                    <th>Status</th>
-                                    <th style="text-align:right">Key Management</th>
+                                    <th>NAME</th>
+                                    <th>CLIENT</th>
+                                    <th>API KEY</th>
+                                    <th>DOMAIN</th>
+                                    <th>SESSIONS (30D)</th>
+                                    <th>STATUS</th>
+                                    <th style="padding-right:24px">ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody id="projects-tbody"></tbody>
@@ -311,14 +313,27 @@
     </div>
 
     <div id="modal-apiKey" class="modal-overlay">
-        <div class="modal glass">
-            <h2>🔑 API Activation Key</h2>
-            <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px">Project identifying key for tracking endpoint.</p>
-            <div class="form-group">
-                <label>Key String</label>
-                <input type="text" id="api-key-val" readonly style="font-family:monospace;color:var(--accent-cyan)">
+        <div class="modal glass" style="max-width: 560px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                 <h2 style="margin:0; display:flex; align-items:center; gap:8px;">🔑 Project API Key</h2>
+                 <div class="modal-close" onclick="closeModal('apiKey')" style="cursor:pointer; color:var(--text-muted); font-size:20px;">✕</div>
             </div>
-            <button class="btn btn-primary" onclick="closeModal('apiKey')">Done</button>
+            <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px">Integration credentials for your Unity WebGL build.</p>
+            
+            <div class="form-group">
+                <label>Add this to your AR build's index.html:</label>
+                <div style="display:flex;gap:8px">
+                    <input type="text" id="api-key-val" readonly style="flex:1; font-family:monospace; color:var(--accent-cyan); background:rgba(0,0,0,0.3);">
+                    <button class="btn btn-primary" style="width:auto; padding:0 20px;" onclick="copyToClipboard('api-key-val')">Copy</button>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:24px">
+                <label>Tracker script tag:</label>
+                <textarea id="api-snippet-val" readonly style="width:100%; height:110px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:var(--radius-md); color:var(--accent-emerald); padding:16px; font-family:monospace; font-size:12px; resize:none; line-height:1.5;"></textarea>
+            </div>
+            
+            <button class="btn btn-primary" style="width:100%; margin-top:8px; background:var(--accent-purple);" onclick="closeModal('apiKey')">Done</button>
         </div>
     </div>
 
@@ -464,20 +479,21 @@
             const tbody = document.getElementById('clients-tbody');
             tbody.innerHTML = data.map(c => `
                 <tr>
-                    <td><div><strong>${esc(c.name)}</strong></div><div style="font-size:11px;color:var(--text-muted)">${esc(c.company || 'Private User')}</div></td>
+                    <td><strong>${esc(c.name)}</strong></td>
                     <td><div style="font-size:13px">${esc(c.email)}</div></td>
                     <td>
                         <div style="display:flex;align-items:center;gap:10px">
                             <code class="pw-mask" id="pw-${c.id}" style="font-family:monospace;font-size:12px;color:var(--text-muted)">••••••••</code>
-                            <button class="btn btn-outline" style="padding:2px 8px;font-size:10px" onclick="toggleReveal('${c.id}', '${esc(c.password_plain || '******')}')">Show</button>
+                            <button class="btn btn-outline" style="padding:2px 10px;font-size:10px;border-radius:12px;border-color:rgba(255,255,255,0.1);color:var(--text-secondary);" onclick="toggleReveal('${c.id}', '${esc(c.password_plain || '******')}')">Show</button>
                         </div>
                     </td>
-                    <td><span class="badge ${c.plan_tier === 'free' ? '' : 'badge-pro'}">${c.plan_tier}</span></td>
-                    <td><strong>${c.total_views || 0}</strong> <small style="color:var(--text-muted)">views</small></td>
-                    <td><span class="badge ${c.is_active ? 'badge-active' : 'badge-inactive'}">${c.is_active ? 'Active' : 'Locked'}</span></td>
-                    <td style="text-align:right">
-                        <button class="btn btn-outline btn-sm" onclick="toggleStatus('client', ${c.id}, ${c.is_active})">Toggle</button>
-                        <button class="btn btn-outline btn-sm" style="color:var(--accent-rose)" onclick="deleteEntry('client', ${c.id})">Drop</button>
+                    <td><strong>${esc(c.company || 'Private User')}</strong></td>
+                    <td><span class="badge ${c.plan_tier === 'free' ? '' : 'badge-pro'}" style="text-transform:uppercase">${c.plan_tier}</span></td>
+                    <td><strong>${c.total_views || 0}</strong></td>
+                    <td><span class="badge ${c.is_active ? 'badge-active' : 'badge-inactive'}">${c.is_active ? 'ACTIVE' : 'LOCKED'}</span></td>
+                    <td style="text-align:right; display:flex; gap:8px; justify-content:flex-end;">
+                        <button class="btn btn-outline btn-sm" style="border-color:rgba(255,255,255,0.1);color:var(--text-secondary);" onclick="toggleStatus('client', ${c.id}, ${c.is_active})">${c.is_active ? 'Disable' : 'Enable'}</button>
+                        <button class="btn btn-primary btn-sm" style="background:#ff4757;color:white;border:none;" onclick="deleteEntry('client', ${c.id})">Delete</button>
                     </td>
                 </tr>
             `).join('');
@@ -488,12 +504,13 @@
                 <tr>
                     <td><strong>${esc(p.name)}</strong></td>
                     <td>${esc(p.client_name)}</td>
-                    <td><div style="font-size:12px;color:var(--text-muted)">${esc(p.domain || 'Any domain')}</div></td>
+                    <td style="color:var(--text-muted);font-family:monospace;font-size:12px">${p.api_key.substring(0, 16)}...</td>
+                    <td><strong>${esc(p.domain || 'Any domain')}</strong></td>
                     <td><strong>${p.total_sessions || 0}</strong></td>
-                    <td><span class="badge ${p.is_active ? 'badge-active' : 'badge-inactive'}">${p.is_active ? 'Online' : 'Offline'}</span></td>
-                    <td style="text-align:right">
-                        <button class="btn btn-primary btn-sm" onclick="showKey('${p.api_key}')">View Key</button>
-                        <button class="btn btn-outline btn-sm" style="color:var(--accent-rose)" onclick="deleteEntry('project', ${p.id})">Delete</button>
+                    <td><span class="badge ${p.is_active ? 'badge-active' : 'badge-inactive'}">${p.is_active ? 'ACTIVE' : 'OFFLINE'}</span></td>
+                    <td style="text-align:right; display:flex; gap:8px; justify-content:flex-end;">
+                        <button class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:6px;border-color:rgba(255,255,255,0.1);color:var(--text-secondary);" onclick="showKey('${p.api_key}')"><span style="color:var(--accent-amber);font-size:14px;">🔑</span> Key</button>
+                        <button class="btn btn-primary btn-sm" style="background:#ff4757;color:white;border:none;" onclick="deleteEntry('project', ${p.id})">Delete</button>
                     </td>
                 </tr>
             `).join('');
@@ -548,11 +565,20 @@
 
         function showKey(k) { 
             document.getElementById('api-key-val').value = k;
+            document.getElementById('api-snippet-val').value = `<script src="${API_BASE}tracker/ar-analytics.js" data-project="${k}"><\/script>`;
             openModal('apiKey');
         }
 
         function openModal(id) { document.getElementById('modal-' + id).classList.add('active'); }
         function closeModal(id) { document.getElementById('modal-' + id).classList.remove('active'); }
+
+        function copyToClipboard(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.select();
+            document.execCommand('copy');
+            showToast('Copied to clipboard', 'success');
+        }
 
         function togglePassInput(id, iconId) {
             const input = document.getElementById(id);
