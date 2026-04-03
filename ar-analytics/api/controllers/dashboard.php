@@ -311,8 +311,8 @@ function handleSessionsList($db, $projectId, $dateFrom) {
         "SELECT session_id, visitor_id, is_new_visitor, started_at, duration_seconds,
                 device_type, os, browser, country, city, referrer
          FROM sessions WHERE project_id = ? AND started_at >= ?
-         ORDER BY started_at DESC LIMIT ? OFFSET ?",
-        [$projectId, $dateFrom, $limit, $offset]
+         ORDER BY started_at DESC LIMIT $limit OFFSET $offset",
+        [$projectId, $dateFrom]
     );
 
     $total = $db->scalar(

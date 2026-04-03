@@ -3,803 +3,616 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Analytics — Admin Panel</title>
+    <title>AR Analytics — Admin Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0a0b0f;
-            --bg-secondary: #111318;
-            --bg-card: #161920;
-            --bg-card-hover: #1c1f28;
-            --border: #1e2230;
-            --border-glow: #2a3045;
-            --text-primary: #f0f2f5;
-            --text-secondary: #8b92a5;
-            --text-muted: #555d72;
-            --accent-green: #00e68a;
-            --accent-green-dim: rgba(0, 230, 138, 0.15);
-            --accent-cyan: #00d4ff;
+            --bg-deep: #06080c;
+            --bg-card: rgba(17, 21, 32, 0.65);
+            --bg-sidebar: rgba(10, 14, 20, 0.98);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
             --accent-purple: #8b5cf6;
-            --accent-orange: #f59e0b;
-            --accent-red: #ef4444;
-            --radius: 16px;
-            --radius-sm: 10px;
-            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --accent-cyan: #22d3ee;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg-primary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-deep);
             color: var(--text-primary);
             min-height: 100vh;
+            background-image: radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
         }
 
-        /* ─── Login ─── */
+        /* ─── Glass Basics ─── */
+        .glass { background: var(--bg-card); backdrop-filter: blur(12px); border: 1px solid var(--border); }
+        
+        /* ─── Scrollbar ─── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        /* ─── Animations ─── */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.6s forwards; opacity: 0; }
+
+        /* ─── Login Screen ─── */
         #login-screen {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: radial-gradient(ellipse at 30% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
-                        var(--bg-primary);
+            display: flex; align-items: center; justify-content: center; min-height: 100vh;
+        }
+        .login-card { width: 100%; max-width: 400px; padding: 48px; border-radius: var(--radius-xl); text-align: center; }
+        .logo-icon { 
+            width: 56px; height: 56px; background: var(--accent-purple); color: #fff; 
+            border-radius: 14px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 900;
         }
 
-        .login-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 48px 40px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: var(--shadow);
-        }
-        .login-box h1 { font-size: 28px; font-weight: 800; text-align: center; margin-bottom: 8px; }
-        .login-box h1 span { color: var(--accent-purple); }
-        .login-box .subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 32px; font-size: 14px; }
-
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
         .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 12px 16px; background: var(--bg-secondary); border: 1px solid var(--border);
-            border-radius: var(--radius-sm); color: var(--text-primary); font-size: 14px; font-family: inherit; outline: none;
-            transition: var(--transition);
+            width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            border-radius: var(--radius-md); color: #fff; font-size: 14px; outline: none; transition: var(--transition);
         }
-        .form-group input:focus, .form-group select:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
-        .form-group textarea { min-height: 80px; resize: vertical; }
+        .form-group input:focus { border-color: var(--accent-purple); }
 
         .btn {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 12px 24px; border: none; border-radius: var(--radius-sm);
+            padding: 12px 24px; border: none; border-radius: var(--radius-md);
             font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
         }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-purple), #7c3aed); color: #fff;
-        }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(139,92,246,0.3); }
-        .btn-full { width: 100%; padding: 14px; font-size: 15px; }
-        .btn-sm { padding: 8px 16px; font-size: 13px; }
-        .btn-success { background: var(--accent-green); color: #000; }
-        .btn-danger { background: var(--accent-red); color: #fff; }
+        .btn-primary { background: var(--accent-purple); color: #fff; width: 100%; }
+        .btn-primary:hover { background: #7c3aed; transform: translateY(-2px); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
-        .btn-outline:hover { border-color: var(--text-secondary); }
+        .btn-sm { padding: 8px 16px; font-size: 12px; }
 
-        .login-error { color: var(--accent-red); font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+        /* ─── Dashboard Screen ─── */
+        #admin-screen { display: none; min-height: 100vh; }
 
-        /* ─── Layout ─── */
-        #admin-screen { display: none; }
-
-        .top-bar {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 16px 32px; background: var(--bg-secondary); border-bottom: 1px solid var(--border);
-            position: sticky; top: 0; z-index: 100;
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 260px;
+            background: var(--bg-sidebar); border-right: 1px solid var(--border);
+            padding: 32px; z-index: 1000;
         }
-        .logo-text { font-size: 18px; font-weight: 800; }
-        .logo-text span { color: var(--accent-purple); }
+        .sidebar-logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; margin-bottom: 48px; }
+        .sidebar-logo span { color: var(--accent-purple); }
 
-        .top-bar-right { display: flex; align-items: center; gap: 12px; }
-        .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: var(--radius-sm); font-family: inherit; font-size: 12px; cursor: pointer; transition: var(--transition); }
-        .btn-logout:hover { border-color: var(--accent-red); color: var(--accent-red); }
-
-        .admin-content { max-width: 1400px; margin: 0 auto; padding: 32px; }
-
-        /* ─── Stats Row ─── */
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
-        .stat-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;
-            transition: var(--transition);
+        .nav-list { list-style: none; }
+        .nav-link {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            color: var(--text-secondary); text-decoration: none; border-radius: var(--radius-md);
+            font-size: 14px; font-weight: 500; margin-bottom: 4px; transition: var(--transition);
         }
-        .stat-card:hover { border-color: var(--border-glow); transform: translateY(-2px); }
-        .stat-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .stat-value { font-size: 32px; font-weight: 800; }
-        .stat-value.green { color: var(--accent-green); }
-        .stat-value.purple { color: var(--accent-purple); }
-        .stat-value.cyan { color: var(--accent-cyan); }
-        .stat-value.orange { color: var(--accent-orange); }
+        .nav-link:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+        .nav-link.active { background: rgba(139, 92, 246, 0.1); color: var(--accent-purple); }
 
-        /* ─── Tabs ─── */
-        .tabs {
-            display: flex; gap: 4px; background: var(--bg-card); border-radius: var(--radius-sm);
-            padding: 4px; border: 1px solid var(--border); margin-bottom: 24px; width: fit-content;
-        }
-        .tab-btn {
-            padding: 10px 24px; border: none; border-radius: 8px; background: transparent;
-            color: var(--text-secondary); font-family: inherit; font-size: 14px; font-weight: 500;
-            cursor: pointer; transition: var(--transition);
-        }
-        .tab-btn.active { background: var(--accent-purple); color: #fff; }
-        .tab-btn:hover:not(.active) { color: var(--text-primary); }
+        .main-content { margin-left: 260px; padding: 40px; }
 
-        /* ─── Table ─── */
-        .table-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
-            overflow: hidden;
-        }
-        .table-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 20px 24px; border-bottom: 1px solid var(--border);
-        }
-        .table-header h2 { font-size: 18px; font-weight: 700; }
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 32px; }
+        .stat-card { padding: 24px; border-radius: var(--radius-lg); }
+        .stat-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+        .stat-value { font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 700; }
 
-        table { width: 100%; border-collapse: collapse; }
-        thead th {
-            text-align: left; padding: 14px 20px; font-size: 12px; font-weight: 600;
-            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
-            background: var(--bg-secondary); border-bottom: 1px solid var(--border);
-        }
-        tbody tr { transition: var(--transition); }
-        tbody tr:hover { background: var(--bg-card-hover); }
-        tbody td {
-            padding: 14px 20px; font-size: 14px; border-bottom: 1px solid var(--border);
-        }
+        /* Tables */
+        .card { border-radius: var(--radius-xl); overflow: hidden; margin-bottom: 32px; }
+        .card-header { padding: 24px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 18px; font-weight: 700; }
 
-        .badge {
-            display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 11px;
-            font-weight: 600; text-transform: uppercase;
-        }
-        .badge-free { background: rgba(100,116,139,0.2); color: #94a3b8; }
-        .badge-pro { background: var(--accent-green-dim); color: var(--accent-green); }
-        .badge-business { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
-        .badge-active { background: rgba(0,230,138,0.15); color: var(--accent-green); }
-        .badge-inactive { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { text-align: left; padding: 16px 24px; background: rgba(255,255,255,0.02); font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        td { padding: 16px 24px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.01); }
 
-        .api-key-cell {
-            font-family: 'Courier New', monospace; font-size: 12px; color: var(--text-muted);
-            max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-            cursor: pointer;
-        }
-        .api-key-cell:hover { color: var(--accent-cyan); }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .badge-active { background: rgba(16, 185, 129, 0.1); color: var(--accent-emerald); }
+        .badge-inactive { background: rgba(244, 63, 94, 0.1); color: var(--accent-rose); }
+        .badge-pro { background: rgba(34, 211, 238, 0.1); color: var(--accent-cyan); }
 
-        .actions-cell { display: flex; gap: 8px; }
+        /* Toasts */
+        .toast-container { position: fixed; bottom: 32px; right: 32px; z-index: 2000; display: flex; flex-direction: column; gap: 12px; }
+        .toast { padding: 14px 20px; background: #111; color: #fff; border-radius: 8px; border-left: 4px solid var(--accent-purple); font-size: 13px; animation: slideIn 0.3s forwards; box-shadow: var(--shadow); }
+        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* ─── Modal ─── */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
-        }
-        .modal-overlay.visible { display: flex; }
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1500; }
+        .modal-overlay.active { display: flex; }
+        .modal { width: 100%; max-width: 480px; padding: 32px; border-radius: var(--radius-xl); animation: zoomIn 0.3s; }
+        @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        .modal {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 32px; width: 100%; max-width: 500px; box-shadow: var(--shadow);
-            animation: slideUp 0.3s ease;
-        }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .modal h2 { font-size: 22px; font-weight: 700; margin-bottom: 24px; }
-        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
-
-        /* ─── Responsive ─── */
-        @media (max-width: 768px) {
-            .top-bar { padding: 12px 16px; }
-            .admin-content { padding: 16px; }
-            .stats-row { grid-template-columns: 1fr 1fr; }
-            .table-card { overflow-x: auto; }
-            table { min-width: 700px; }
+        @media (max-width: 1024px) {
+            .sidebar { width: 80px; padding: 20px 12px; }
+            .sidebar-logo span, .nav-link span, .admin-name { display: none; }
+            .main-content { margin-left: 80px; }
         }
     </style>
 </head>
 <body>
 
-<!-- ═══════════ LOGIN ═══════════ -->
-<div id="login-screen">
-    <div class="login-box">
-        <h1>Admin <span>Panel</span></h1>
-        <p class="subtitle">AR Analytics Management</p>
-        <form onsubmit="adminLogin(event)">
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Login -->
+    <div id="login-screen">
+        <div class="login-card glass animate-fade">
+            <div class="logo-icon">AR</div>
+            <h2 style="margin-bottom:8px">Admin Nexus</h2>
+            <p style="color:var(--text-secondary);font-size:14px;margin-bottom:32px">Global Management Portal</p>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-user" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div style="position:relative">
+                        <input type="password" id="login-pass" required>
+                        <i id="at-1" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0.5;font-style:normal" onclick="togglePassInput('login-pass', 'at-1')">👁️</i>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="login-btn">Secure Access</button>
+                <p id="login-err" style="color:var(--accent-rose);font-size:12px;margin-top:12px;display:none"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Screen -->
+    <div id="admin-screen">
+        <nav class="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-icon" style="width:32px;height:32px;font-size:16px;margin:0">AR</div>
+                <span>Admin Hub</span>
+            </div>
+            <ul class="nav-list">
+                <li><a href="#" class="nav-link active" onclick="switchTab('clients')"><i>👥</i> <span>Clients</span></a></li>
+                <li><a href="#" class="nav-link" onclick="switchTab('projects')"><i>📁</i> <span>Projects</span></a></li>
+                <li><a href="#" class="nav-link" onclick="switchTab('admins')"><i>🛡️</i> <span>Administrators</span></a></li>
+                <li><a href="#" class="nav-link" onclick="openModal('change-password')"><i>🔑</i> <span>Security</span></a></li>
+            </ul>
+            <div style="position:absolute;bottom:32px;left:32px;right:32px">
+                <button class="nav-link" style="width:100%;border:none;background:transparent;cursor:pointer" onclick="handleLogout()"><i>🚪</i> <span>Sign Out</span></button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:40px">
+                <div>
+                    <h1 id="tab-title" style="font-family:'Outfit';font-size:32px;margin-bottom:4px">Client Nexus</h1>
+                    <p style="color:var(--text-secondary);font-size:14px">Manage users and global platform resources</p>
+                </div>
+                <div class="admin-name" id="admin-user-display" style="font-size:14px;font-weight:600;color:var(--accent-purple)">admin</div>
+            </header>
+
+            <!-- Stats -->
+            <div class="stats-grid animate-fade">
+                <div class="stat-card glass">
+                    <div class="stat-label">Total Clients</div>
+                    <div class="stat-value" id="stat-total-clients">-</div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-label">Managed Projects</div>
+                    <div class="stat-value" id="stat-total-projects">-</div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-label">Global Views (30d)</div>
+                    <div class="stat-value" id="stat-views-30d" style="color:var(--accent-cyan)">-</div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-label">Active Today</div>
+                    <div class="stat-value" id="stat-views-today" style="color:var(--accent-emerald)">-</div>
+                </div>
+            </div>
+
+            <!-- Client Section -->
+            <div id="tab-clients" class="tab-pane">
+                <div class="card glass animate-fade">
+                    <div class="card-header">
+                        <div class="card-title">Client Directory</div>
+                        <button class="btn btn-primary btn-sm" style="width:auto" onclick="openModal('add-client')">+ Add Client</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Client / Company</th>
+                                    <th>Email</th>
+                                    <th>Password</th>
+                                    <th>Plan</th>
+                                    <th>Usage (30d)</th>
+                                    <th>Status</th>
+                                    <th style="text-align:right">Management</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Section -->
+            <div id="tab-projects" class="tab-pane" style="display:none">
+                <div class="card glass animate-fade">
+                    <div class="card-header">
+                        <div class="card-title">Project Registry</div>
+                        <button class="btn btn-primary btn-sm" style="width:auto" onclick="openModal('add-project')">+ Create Project</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Project Name</th>
+                                    <th>Owner</th>
+                                    <th>Domain / Environment</th>
+                                    <th>Sessions</th>
+                                    <th>Status</th>
+                                    <th style="text-align:right">Key Management</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projects-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Section -->
+            <div id="tab-admins" class="tab-pane" style="display:none">
+                <div class="card glass animate-fade">
+                    <div class="card-header">
+                        <div class="card-title">Primary Administrators</div>
+                        <button class="btn btn-primary btn-sm" style="width:auto" onclick="openModal('add-admin')">+ New Admin</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Password</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admins-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-add-client" class="modal-overlay">
+        <div class="modal glass">
+            <h2>Add New Client</h2>
+            <form onsubmit="handleAddClient(event)">
+                <div class="form-group"><label>Name</label><input type="text" id="ac-name" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="ac-email" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="ac-pass" required></div>
+                <div class="form-group"><label>Plan Tier</label><select id="ac-plan"><option value="free">Free</option><option value="pro">Pro</option><option value="business">Business</option></select></div>
+                <div style="display:flex;gap:12px;margin-top:24px">
+                    <button type="button" class="btn btn-outline" style="flex:1" onclick="closeModal('add-client')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1">Provision</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-apiKey" class="modal-overlay">
+        <div class="modal glass">
+            <h2>🔑 API Activation Key</h2>
+            <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px">Project identifying key for tracking endpoint.</p>
             <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="admin-username" placeholder="admin" required>
+                <label>Key String</label>
+                <input type="text" id="api-key-val" readonly style="font-family:monospace;color:var(--accent-cyan)">
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="admin-password" placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn btn-primary btn-full">Sign In</button>
-            <p class="login-error" id="login-error"></p>
-        </form>
-    </div>
-</div>
-
-<!-- ═══════════ ADMIN SCREEN ═══════════ -->
-<div id="admin-screen">
-    <div class="top-bar">
-        <div class="logo-text">Admin <span>Panel</span></div>
-        <div class="top-bar-right">
-            <span id="admin-name" style="font-size:13px;color:var(--text-secondary)">admin</span>
-            <button class="btn btn-outline btn-sm" onclick="openModal('change-password')">Change Password</button>
-            <button class="btn-logout" onclick="logout()">Logout</button>
+            <button class="btn btn-primary" onclick="closeModal('apiKey')">Done</button>
         </div>
     </div>
 
-    <div class="admin-content">
-        <!-- Stats -->
-        <div class="stats-row" id="admin-stats">
-            <div class="stat-card"><div class="stat-label">Total Clients</div><div class="stat-value green" id="s-clients">-</div></div>
-            <div class="stat-card"><div class="stat-label">Active Clients</div><div class="stat-value cyan" id="s-active">-</div></div>
-            <div class="stat-card"><div class="stat-label">Total Projects</div><div class="stat-value purple" id="s-projects">-</div></div>
-            <div class="stat-card"><div class="stat-label">Views (30d)</div><div class="stat-value orange" id="s-views">-</div></div>
-            <div class="stat-card"><div class="stat-label">Views Today</div><div class="stat-value green" id="s-today">-</div></div>
-        </div>
-
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('clients')">Clients</button>
-            <button class="tab-btn" onclick="switchTab('projects')">Projects</button>
-            <button class="tab-btn" onclick="switchTab('admins')">Admins</button>
-        </div>
-
-        <!-- Clients Table -->
-        <div id="tab-clients" class="table-card">
-            <div class="table-header">
-                <h2>Clients</h2>
-                <button class="btn btn-primary btn-sm" onclick="openModal('create-client')">+ Add Client</button>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Password</th>
-                        <th>Company</th>
-                        <th>Plan</th>
-                        <th>Views (30d)</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="clients-tbody"></tbody>
-            </table>
-        </div>
-
-        <!-- Projects Table -->
-        <div id="tab-projects" class="table-card" style="display:none">
-            <div class="table-header">
-                <h2>Projects</h2>
-                <button class="btn btn-primary btn-sm" onclick="openModal('create-project')">+ Add Project</button>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Client</th>
-                        <th>API Key</th>
-                        <th>Domain</th>
-                        <th>Sessions (30d)</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="projects-tbody"></tbody>
-            </table>
-        </div>
-
-        <!-- Admins Table -->
-        <div id="tab-admins" class="table-card" style="display:none">
-            <div class="table-header">
-                <h2>Admin Users</h2>
-                <button class="btn btn-primary btn-sm" onclick="openModal('create-admin')">+ Add Admin</button>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Password</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="admins-tbody"></tbody>
-            </table>
+    <div id="modal-change-password" class="modal-overlay">
+        <div class="modal glass">
+            <h2>System Password</h2>
+            <form onsubmit="handleChangePassword(event)">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <div style="position:relative">
+                        <input type="password" id="cp-old" required>
+                        <i id="at-2" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0.5;font-style:normal" onclick="togglePassInput('cp-old', 'at-2')">👁️</i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>New Security Key</label>
+                    <div style="position:relative">
+                        <input type="password" id="cp-new" required minlength="8">
+                        <i id="at-3" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0.5;font-style:normal" onclick="togglePassInput('cp-new', 'at-3')">👁️</i>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Rotate Credentials</button>
+                <button type="button" class="btn btn-outline" style="margin-top:8px;width:100%" onclick="closeModal('change-password')">Cancel</button>
+            </form>
         </div>
     </div>
-</div>
 
-<!-- ═══════════ MODALS ═══════════ -->
-
-<!-- Create Client Modal -->
-<div class="modal-overlay" id="modal-create-client">
-    <div class="modal">
-        <h2>Add New Client</h2>
-        <form onsubmit="createClient(event)">
-            <div class="form-group"><label>Name *</label><input type="text" id="cc-name" required></div>
-            <div class="form-group"><label>Email *</label><input type="email" id="cc-email" required></div>
-            <div class="form-group"><label>Password *</label><input type="password" id="cc-password" required minlength="8"></div>
-            <div class="form-group"><label>Company</label><input type="text" id="cc-company"></div>
-            <div class="form-group"><label>Phone</label><input type="text" id="cc-phone"></div>
-            <div class="form-group">
-                <label>Plan</label>
-                <select id="cc-plan">
-                    <option value="free">Free</option>
-                    <option value="pro">Pro</option>
-                    <option value="business">Business</option>
-                </select>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="closeModal('create-client')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Create Client</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Create Project Modal -->
-<div class="modal-overlay" id="modal-create-project">
-    <div class="modal">
-        <h2>Add New Project</h2>
-        <form onsubmit="createProject(event)">
-            <div class="form-group">
-                <label>Client *</label>
-                <select id="cp-client" required></select>
-            </div>
-            <div class="form-group"><label>Project Name *</label><input type="text" id="cp-name" required></div>
-            <div class="form-group"><label>Domain</label><input type="text" id="cp-domain" placeholder="e.g. client-ar.com"></div>
-            <div class="form-group"><label>Description</label><textarea id="cp-desc"></textarea></div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="closeModal('create-project')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Create Project</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- API Key Display Modal -->
-<div class="modal-overlay" id="modal-api-key">
-    <div class="modal">
-        <h2>🔑 Project API Key</h2>
-        <p style="color:var(--text-secondary);margin-bottom:16px">Add this to your AR build's index.html:</p>
-        <div style="background:var(--bg-secondary);padding:16px;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:16px">
-            <code id="api-key-code" style="font-size:13px;color:var(--accent-cyan);word-break:break-all"></code>
-        </div>
-        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px">Tracker script tag:</p>
-        <div style="background:var(--bg-secondary);padding:16px;border-radius:var(--radius-sm);border:1px solid var(--border)">
-            <code id="tracker-snippet" style="font-size:12px;color:var(--accent-green);word-break:break-all"></code>
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-primary" onclick="closeModal('api-key')">Done</button>
+    <div id="modal-add-admin" class="modal-overlay">
+        <div class="modal glass">
+            <h2>New System Admin</h2>
+            <form onsubmit="handleAddAdmin(event)">
+                <div class="form-group"><label>Username</label><input type="text" id="aa-user" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="aa-email" required></div>
+                <div class="form-group"><label>Initial Password</label><input type="password" id="aa-pass" required></div>
+                <div style="display:flex;gap:12px;margin-top:24px">
+                    <button type="button" class="btn btn-outline" style="flex:1" onclick="closeModal('add-admin')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1">Create</button>
+                </div>
+            </form>
         </div>
     </div>
-</div>
 
-<!-- Change Password Modal -->
-<div class="modal-overlay" id="modal-change-password">
-    <div class="modal">
-        <h2>Change Password</h2>
-        <form onsubmit="changePassword(event)">
-            <div class="form-group"><label>Current Password *</label><input type="password" id="cp-current" required></div>
-            <div class="form-group"><label>New Password *</label><input type="password" id="cp-new" required minlength="8"></div>
-            <div class="form-group"><label>Confirm New Password *</label><input type="password" id="cp-confirm" required minlength="8"></div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="closeModal('change-password')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Update Password</button>
-            </div>
-        </form>
+    <div id="modal-add-project" class="modal-overlay">
+        <div class="modal glass">
+            <h2>Create New Project</h2>
+            <form onsubmit="handleAddProject(event)">
+                <div class="form-group">
+                    <label>Assign to Client</label>
+                    <select id="ap-client" required></select>
+                </div>
+                <div class="form-group"><label>Project Name</label><input type="text" id="ap-name" required></div>
+                <div class="form-group"><label>Domain (Optional)</label><input type="text" id="ap-domain" placeholder="example.com"></div>
+                <div style="display:flex;gap:12px;margin-top:24px">
+                    <button type="button" class="btn btn-outline" style="flex:1" onclick="closeModal('add-project')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex:1">Initialize</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<!-- Create Admin Modal -->
-<div class="modal-overlay" id="modal-create-admin">
-    <div class="modal">
-        <h2>Add New Admin</h2>
-        <form onsubmit="createAdminUser(event)">
-            <div class="form-group"><label>Username *</label><input type="text" id="ca-username" required></div>
-            <div class="form-group"><label>Email</label><input type="email" id="ca-email"></div>
-            <div class="form-group"><label>Password *</label><input type="password" id="ca-password" required minlength="8"></div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="closeModal('create-admin')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Create Admin</button>
-            </div>
-        </form>
-    </div>
-</div>
+    <script>
+        const API_BASE = window.location.origin + window.location.pathname.replace(/\/admin\/?.*$/, '/');
+        let state = {
+            token: localStorage.getItem('ara_admin_token') || null,
+            admin: null,
+            activeTab: 'clients'
+        };
 
-<!-- Reset Password Modal -->
-<div class="modal-overlay" id="modal-reset-password">
-    <div class="modal">
-        <h2 id="reset-title">Reset Password</h2>
-        <form onsubmit="handleResetPassword(event)">
-            <input type="hidden" id="reset-type">
-            <input type="hidden" id="reset-id">
-            <div class="form-group"><label>New Password *</label><input type="text" id="reset-new-pass" required minlength="8" placeholder="Enter password to store"></div>
-            <p style="font-size:11px;color:var(--text-muted);margin-top:-16px;margin-bottom:24px">Updating will store this in plain-text so you can view it later.</p>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="closeModal('reset-password')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Update & Store</button>
-            </div>
-        </form>
-    </div>
-</div>
+        (async function init() {
+            if (state.token) {
+                try {
+                    const res = await fetchAPI('auth?action=me');
+                    if (res.success && res.data.role === 'admin') {
+                        state.admin = res.data;
+                        showAdminHub();
+                    } else { handleLogout(); }
+                } catch(e) { handleLogout(); }
+            }
+        })();
 
-<script>
-const API_BASE = window.location.pathname.replace('/admin/', '/').replace('/admin', '/');
-let token = localStorage.getItem('ara_admin_token') || '';
-let clientsList = [];
-
-// ─── Init ───
-(function() {
-    if (token) {
-        fetchAPI('auth?action=me').then(d => {
-            if (d.success && d.data.role === 'admin') showAdmin(d.data);
-            else { localStorage.removeItem('ara_admin_token'); token = ''; }
-        }).catch(() => { localStorage.removeItem('ara_admin_token'); token = ''; });
-    }
-})();
-
-// ─── Auth ───
-async function adminLogin(e) {
-    e.preventDefault();
-    const err = document.getElementById('login-error');
-    try {
-        const d = await fetchAPI('auth?action=admin-login', {
-            method: 'POST',
-            body: JSON.stringify({
-                username: document.getElementById('admin-username').value,
-                password: document.getElementById('admin-password').value,
-            }),
-        });
-        if (d.success) {
-            token = d.data.token;
-            localStorage.setItem('ara_admin_token', token);
-            err.style.display = 'none';
-            showAdmin(d.data.user);
-        } else {
-            err.textContent = d.message; err.style.display = 'block';
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true;
+            try {
+                const res = await fetchAPI('auth?action=admin-login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username: document.getElementById('login-user').value, password: document.getElementById('login-pass').value })
+                });
+                if (res.success) {
+                    state.token = res.data.token;
+                    state.admin = res.data.user;
+                    localStorage.setItem('ara_admin_token', state.token);
+                    showAdminHub();
+                } else {
+                    document.getElementById('login-err').textContent = res.message;
+                    document.getElementById('login-err').style.display = 'block';
+                }
+            } catch(e) { showToast('Auth system offline', 'error'); }
+            finally { btn.disabled = false; }
         }
-    } catch (e) { err.textContent = 'Connection failed'; err.style.display = 'block'; }
-}
 
-function logout() {
-    token = ''; localStorage.removeItem('ara_admin_token');
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('admin-screen').style.display = 'none';
-}
+        function handleLogout() {
+            localStorage.removeItem('ara_admin_token');
+            state.token = null;
+            location.reload();
+        }
 
-function showAdmin(user) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('admin-screen').style.display = 'block';
-    document.getElementById('admin-name').textContent = user.username || 'admin';
-    loadAdminData();
-}
+        function showAdminHub() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('admin-screen').style.display = 'block';
+            document.getElementById('admin-user-display').textContent = state.admin.username;
+            loadData();
+        }
 
-// ─── Data Loading ───
-async function loadAdminData() {
-    const [overview, clients, projects] = await Promise.all([
-        fetchAPI('admin?action=overview'),
-        fetchAPI('admin?action=clients'),
-        fetchAPI('admin?action=projects'),
-    ]);
+        async function loadData() {
+            const [overview, clients, projects, admins] = await Promise.all([
+                fetchAPI('admin?action=overview'),
+                fetchAPI('admin?action=clients'),
+                fetchAPI('admin?action=projects'),
+                fetchAPI('admin?action=admins')
+            ]);
 
-    if (overview.success) {
-        const o = overview.data;
-        document.getElementById('s-clients').textContent = o.total_clients;
-        document.getElementById('s-active').textContent = o.active_clients;
-        document.getElementById('s-projects').textContent = o.total_projects;
-        document.getElementById('s-views').textContent = formatNum(o.views_30d);
-        document.getElementById('s-today').textContent = formatNum(o.views_today);
-    }
+            if (overview.success) {
+                const o = overview.data;
+                document.getElementById('stat-total-clients').textContent = o.total_clients;
+                document.getElementById('stat-total-projects').textContent = o.total_projects;
+                document.getElementById('stat-views-30d').textContent = o.views_30d.toLocaleString();
+                document.getElementById('stat-views-today').textContent = o.views_today.toLocaleString();
+            }
 
-    if (clients.success) {
-        clientsList = clients.data;
-        renderClients(clients.data);
-        populateClientSelect(clients.data);
-    }
+            if (clients.success) {
+                renderClients(clients.data);
+                // Populate project client selector
+                const sel = document.getElementById('ap-client');
+                if (sel) sel.innerHTML = clients.data.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+            }
+            if (projects.success) renderProjects(projects.data);
+            if (admins.success) renderAdmins(admins.data);
+        }
 
-    if (projects.success) renderProjects(projects.data);
+        function renderClients(data) {
+            const tbody = document.getElementById('clients-tbody');
+            tbody.innerHTML = data.map(c => `
+                <tr>
+                    <td><div><strong>${esc(c.name)}</strong></div><div style="font-size:11px;color:var(--text-muted)">${esc(c.company || 'Private User')}</div></td>
+                    <td><div style="font-size:13px">${esc(c.email)}</div></td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <code class="pw-mask" id="pw-${c.id}" style="font-family:monospace;font-size:12px;color:var(--text-muted)">••••••••</code>
+                            <button class="btn btn-outline" style="padding:2px 8px;font-size:10px" onclick="toggleReveal('${c.id}', '${esc(c.password_plain || '******')}')">Show</button>
+                        </div>
+                    </td>
+                    <td><span class="badge ${c.plan_tier === 'free' ? '' : 'badge-pro'}">${c.plan_tier}</span></td>
+                    <td><strong>${c.total_views || 0}</strong> <small style="color:var(--text-muted)">views</small></td>
+                    <td><span class="badge ${c.is_active ? 'badge-active' : 'badge-inactive'}">${c.is_active ? 'Active' : 'Locked'}</span></td>
+                    <td style="text-align:right">
+                        <button class="btn btn-outline btn-sm" onclick="toggleStatus('client', ${c.id}, ${c.is_active})">Toggle</button>
+                        <button class="btn btn-outline btn-sm" style="color:var(--accent-rose)" onclick="deleteEntry('client', ${c.id})">Drop</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
 
-    const admins = await fetchAPI('admin?action=admins');
-    if (admins.success) renderAdmins(admins.data);
-}
+        function renderProjects(data) {
+            document.getElementById('projects-tbody').innerHTML = data.map(p => `
+                <tr>
+                    <td><strong>${esc(p.name)}</strong></td>
+                    <td>${esc(p.client_name)}</td>
+                    <td><div style="font-size:12px;color:var(--text-muted)">${esc(p.domain || 'Any domain')}</div></td>
+                    <td><strong>${p.total_sessions || 0}</strong></td>
+                    <td><span class="badge ${p.is_active ? 'badge-active' : 'badge-inactive'}">${p.is_active ? 'Online' : 'Offline'}</span></td>
+                    <td style="text-align:right">
+                        <button class="btn btn-primary btn-sm" onclick="showKey('${p.api_key}')">View Key</button>
+                        <button class="btn btn-outline btn-sm" style="color:var(--accent-rose)" onclick="deleteEntry('project', ${p.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
 
-function renderAdmins(data) {
-    const tbody = document.getElementById('admins-tbody');
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted)">No admin users</td></tr>'; return; }
-    tbody.innerHTML = data.map(a => `
-        <tr>
-            <td><strong>${esc(a.username)}</strong></td>
-            <td>${esc(a.email || '-')}</td>
-            <td>
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-                    <code id="apw-${a.id}">${esc(a.password_plain ? '••••••••' : '******')}</code>
-                    ${a.password_plain 
-                        ? `<button class="btn btn-outline" style="padding:2px 8px;font-size:10px" onclick="togglePassDisplayAdmin(${a.id}, '${esc(a.password_plain)}')">Show</button>` 
-                        : `<button class="btn btn-outline" style="padding:2px 8px;font-size:10px;color:var(--accent-orange)" onclick="openResetModal('admin', ${a.id}, '${esc(a.username)}')">Set</button>`
-                    }
-                </div>
-            </td>
-            <td>${new Date(a.created_at).toLocaleDateString()}</td>
-            <td class="actions-cell">
-                <button class="btn btn-danger btn-sm" onclick="deleteAdmin(${a.id}, '${esc(a.username)}')">Delete</button>
-            </td>
-        </tr>
-    `).join('');
-}
+        function renderAdmins(data) {
+            document.getElementById('admins-tbody').innerHTML = data.map(a => `
+                <tr>
+                    <td><strong>${esc(a.username)}</strong></td>
+                    <td>${esc(a.email || '-')}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <code class="pw-mask" id="apw-${a.id}" style="font-family:monospace;font-size:12px;color:var(--text-muted)">••••••••</code>
+                            <button class="btn btn-outline" style="padding:2px 8px;font-size:10px" onclick="toggleReveal('a' + '${a.id}', '${esc(a.password_plain || '******')}', true)">Show</button>
+                        </div>
+                    </td>
+                    <td><button class="btn btn-outline btn-sm" style="color:var(--accent-rose)" onclick="deleteEntry('admin', ${a.id})">X</button></td>
+                </tr>
+            `).join('');
+        }
 
-function renderClients(data) {
-    const tbody = document.getElementById('clients-tbody');
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No clients yet</td></tr>'; return; }
-    tbody.innerHTML = data.map(c => `
-        <tr>
-            <td><strong>${esc(c.name)}</strong></td>
-            <td>${esc(c.email)}</td>
-            <td class="api-key-cell">
-                <div style="display:flex;align-items:center;gap:8px">
-                    <code id="pw-${c.id}">${esc(c.password_plain ? '••••••••' : '******')}</code>
-                    ${c.password_plain 
-                        ? `<button class="btn btn-outline" style="padding:2px 8px;font-size:10px" onclick="togglePassDisplay(${c.id}, '${esc(c.password_plain)}')">Show</button>` 
-                        : `<button class="btn btn-outline" style="padding:2px 8px;font-size:10px;color:var(--accent-orange)" onclick="openResetModal('client', ${c.id}, '${esc(c.name)}')">Set</button>`
-                    }
-                </div>
-            </td>
-            <td>${esc(c.company || '-')}</td>
-            <td><span class="badge badge-${c.plan_tier}">${c.plan_tier}</span></td>
-            <td>${formatNum(c.total_views || 0)}</td>
-            <td><span class="badge badge-${c.is_active ? 'active' : 'inactive'}">${c.is_active ? 'Active' : 'Inactive'}</span></td>
-            <td class="actions-cell">
-                <button class="btn btn-outline btn-sm" onclick="toggleClient(${c.id}, ${c.is_active})">${c.is_active ? 'Disable' : 'Enable'}</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteClient(${c.id}, '${esc(c.name)}')">Delete</button>
-            </td>
-        </tr>
-    `).join('');
-}
+        function toggleReveal(id, val, isAdmin = false) {
+            const elId = isAdmin ? 'apw-' + id.substring(1) : 'pw-' + id;
+            const el = document.getElementById(elId);
+            const btn = event.currentTarget;
+            if (el.textContent === '••••••••') {
+                el.textContent = val;
+                btn.textContent = 'Hide';
+                el.style.color = 'var(--accent-cyan)';
+            } else {
+                el.textContent = '••••••••';
+                btn.textContent = 'Show';
+                el.style.color = 'var(--text-muted)';
+            }
+        }
 
-function renderProjects(data) {
-    const tbody = document.getElementById('projects-tbody');
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No projects yet</td></tr>'; return; }
-    tbody.innerHTML = data.map(p => `
-        <tr>
-            <td><strong>${esc(p.name)}</strong></td>
-            <td>${esc(p.client_name || '-')}</td>
-            <td class="api-key-cell" onclick="showApiKey('${p.api_key}', '${esc(p.name)}')" title="Click to view">${p.api_key.substring(0, 16)}...</td>
-            <td>${esc(p.domain || '-')}</td>
-            <td>${formatNum(p.total_sessions || 0)}</td>
-            <td><span class="badge badge-${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'Active' : 'Inactive'}</span></td>
-            <td class="actions-cell">
-                <button class="btn btn-outline btn-sm" onclick="showApiKey('${p.api_key}', '${esc(p.name)}')">🔑 Key</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteProject(${p.id}, '${esc(p.name)}')">Delete</button>
-            </td>
-        </tr>
-    `).join('');
-}
+        async function fetchAPI(endpoint, opts = {}) {
+            const head = { 'Content-Type': 'application/json' };
+            if (state.token) head['Authorization'] = 'Bearer ' + state.token;
+            const res = await fetch(`${API_BASE}api/controllers/${endpoint.split('?')[0]}.php${endpoint.includes('?') ? '?' + endpoint.split('?')[1] : ''}`, { ...opts, headers: head });
+            if (res.status === 401) handleLogout();
+            return res.json();
+        }
 
-function populateClientSelect(clients) {
-    const sel = document.getElementById('cp-client');
-    sel.innerHTML = '<option value="">Select Client</option>' + 
-        clients.map(c => `<option value="${c.id}">${esc(c.name)} (${esc(c.email)})</option>`).join('');
-}
+        function switchTab(t) {
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+            document.getElementById('tab-' + t).style.display = 'block';
+            document.getElementById('tab-title').textContent = t.charAt(0).toUpperCase() + t.slice(1) + ' Nexus';
+        }
 
-// ─── Create ───
-async function createClient(e) {
-    e.preventDefault();
-    const d = await fetchAPI('admin?action=clients', {
-        method: 'POST',
-        body: JSON.stringify({
-            name: document.getElementById('cc-name').value,
-            email: document.getElementById('cc-email').value,
-            password: document.getElementById('cc-password').value,
-            company: document.getElementById('cc-company').value,
-            phone: document.getElementById('cc-phone').value,
-            plan_tier: document.getElementById('cc-plan').value,
-        }),
-    });
-    if (d.success) {
-        closeModal('create-client');
-        e.target.reset();
-        loadAdminData();
-    } else {
-        alert(d.message);
-    }
-}
+        function showKey(k) { 
+            document.getElementById('api-key-val').value = k;
+            openModal('apiKey');
+        }
 
-async function createProject(e) {
-    e.preventDefault();
-    const d = await fetchAPI('admin?action=projects', {
-        method: 'POST',
-        body: JSON.stringify({
-            client_id: parseInt(document.getElementById('cp-client').value),
-            name: document.getElementById('cp-name').value,
-            domain: document.getElementById('cp-domain').value,
-            description: document.getElementById('cp-desc').value,
-        }),
-    });
-    if (d.success) {
-        closeModal('create-project');
-        e.target.reset();
-        showApiKey(d.data.api_key, d.data.name);
-        loadAdminData();
-    } else {
-        alert(d.message);
-    }
-}
+        function openModal(id) { document.getElementById('modal-' + id).classList.add('active'); }
+        function closeModal(id) { document.getElementById('modal-' + id).classList.remove('active'); }
 
-async function createAdminUser(e) {
-    e.preventDefault();
-    const username = document.getElementById('ca-username').value;
-    const email = document.getElementById('ca-email').value;
-    const password = document.getElementById('ca-password').value;
+        function togglePassInput(id, iconId) {
+            const input = document.getElementById(id);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.style.opacity = '1';
+                icon.textContent = '🔒';
+            } else {
+                input.type = 'password';
+                icon.style.opacity = '0.5';
+                icon.textContent = '👁️';
+            }
+        }
 
-    const d = await fetchAPI('admin?action=admins', {
-        method: 'POST',
-        body: JSON.stringify({ username, email, password }),
-    });
+        async function handleAddClient(e) {
+            e.preventDefault();
+            const res = await fetchAPI('admin?action=clients', { method: 'POST', body: JSON.stringify({ name: document.getElementById('ac-name').value, email: document.getElementById('ac-email').value, password: document.getElementById('ac-pass').value, plan_tier: document.getElementById('ac-plan').value }) });
+            if (res.success) { closeModal('add-client'); e.target.reset(); loadData(); showToast('Client provisioned', 'success'); } else showToast(res.message, 'error');
+        }
 
-    if (d.success) {
-        closeModal('create-admin');
-        e.target.reset();
-        loadAdminData();
-    } else {
-        alert(d.message);
-    }
-}
+        async function handleAddAdmin(e) {
+            e.preventDefault();
+            const res = await fetchAPI('admin?action=admins', { method: 'POST', body: JSON.stringify({ username: document.getElementById('aa-user').value, email: document.getElementById('aa-email').value, password: document.getElementById('aa-pass').value }) });
+            if (res.success) { closeModal('add-admin'); e.target.reset(); loadData(); showToast('New admin added', 'success'); } else showToast(res.message, 'error');
+        }
 
-async function changePassword(e) {
-    e.preventDefault();
-    const current_password = document.getElementById('cp-current').value;
-    const new_password = document.getElementById('cp-new').value;
-    const confirm_password = document.getElementById('cp-confirm').value;
+        async function handleAddProject(e) {
+            e.preventDefault();
+            const res = await fetchAPI('admin?action=projects', { method: 'POST', body: JSON.stringify({ client_id: document.getElementById('ap-client').value, name: document.getElementById('ap-name').value, domain: document.getElementById('ap-domain').value }) });
+            if (res.success) { closeModal('add-project'); e.target.reset(); loadData(); showToast('Project initialized', 'success'); } else showToast(res.message, 'error');
+        }
 
-    if (new_password !== confirm_password) {
-        alert('New passwords do not match');
-        return;
-    }
+        async function handleChangePassword(e) {
+            e.preventDefault();
+            const res = await fetchAPI('admin?action=change-password', { method: 'POST', body: JSON.stringify({ old_password: document.getElementById('cp-old').value, new_password: document.getElementById('cp-new').value }) });
+            if (res.success) { closeModal('change-password'); showToast('Password updated', 'success'); } else showToast(res.message, 'error');
+        }
 
-    const d = await fetchAPI('auth?action=change-password', {
-        method: 'POST',
-        body: JSON.stringify({ current_password, new_password }),
-    });
+        async function deleteEntry(type, id) {
+            if (!confirm(`Delete this ${type}? This action is destructive.`)) return;
+            const res = await fetchAPI(`admin?action=${type}&id=${id}`, { method: 'DELETE' });
+            if (res.success) { loadData(); showToast('Entry removed', 'info'); }
+        }
 
-    if (d.success) {
-        closeModal('change-password');
-        e.target.reset();
-        alert('Password updated successfully');
-    } else {
-        alert(d.message);
-    }
-}
+        async function toggleStatus(type, id, cur) {
+            await fetchAPI(`admin?action=${type}&id=${id}`, { method: 'PUT', body: JSON.stringify({ is_active: !cur }) });
+            loadData();
+        }
 
-// ─── Actions ───
-async function toggleClient(id, isActive) {
-    await fetchAPI(`admin?action=client&id=${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ is_active: !isActive }),
-    });
-    loadAdminData();
-}
+        function showToast(m, t) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${t}`;
+            toast.textContent = m;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
+        }
 
-async function deleteClient(id, name) {
-    if (!confirm(`Delete client "${name}" and ALL their data? This cannot be undone.`)) return;
-    await fetchAPI(`admin?action=client&id=${id}`, { method: 'DELETE' });
-    loadAdminData();
-}
-
-async function deleteProject(id, name) {
-    if (!confirm(`Delete project "${name}" and ALL its analytics data?`)) return;
-    await fetchAPI(`admin?action=project&id=${id}`, { method: 'DELETE' });
-    loadAdminData();
-}
-
-async function deleteAdmin(id, name) {
-    if (!confirm(`Delete admin user "${name}"? This cannot be undone.`)) return;
-    const d = await fetchAPI(`admin?action=admin_user&id=${id}`, { method: 'DELETE' });
-    if (d.success) {
-        loadAdminData();
-    } else {
-        alert(d.message);
-    }
-}
-
-function showApiKey(key, projectName) {
-    document.getElementById('api-key-code').textContent = key;
-    const serverUrl = window.location.origin + window.location.pathname.replace('/admin/', '/').replace('/admin', '/');
-    document.getElementById('tracker-snippet').textContent = 
-        `<script src="${serverUrl}tracker/ar-analytics.js" data-project="${key}"><\/script>`;
-    openModal('api-key');
-}
-
-// ─── Tabs ───
-function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
-    document.getElementById('tab-clients').style.display = tab === 'clients' ? 'block' : 'none';
-    document.getElementById('tab-projects').style.display = tab === 'projects' ? 'block' : 'none';
-    document.getElementById('tab-admins').style.display = tab === 'admins' ? 'block' : 'none';
-}
-
-// ─── Modal ───
-function openModal(name) { document.getElementById('modal-' + name).classList.add('visible'); }
-function closeModal(name) { document.getElementById('modal-' + name).classList.remove('visible'); }
-
-// ─── API ───
-async function fetchAPI(endpoint, options = {}) {
-    const url = API_BASE + 'api/controllers/' + endpoint.split('?')[0] + '.php' + 
-                (endpoint.includes('?') ? '?' + endpoint.split('?')[1] : '');
-    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-    const r = await fetch(url, { ...options, headers });
-    return r.json();
-}
-
-function togglePassDisplay(id, pass) {
-    const el = document.getElementById('pw-' + id);
-    const btn = el.nextElementSibling;
-    if (el.textContent.includes('•')) {
-        el.textContent = pass;
-        btn.textContent = 'Hide';
-    } else {
-        el.textContent = '••••••••';
-        btn.textContent = 'Show';
-    }
-}
-
-function togglePassDisplayAdmin(id, pass) {
-    const el = document.getElementById('apw-' + id);
-    const btn = el.nextElementSibling;
-    if (el.textContent.includes('•')) {
-        el.textContent = pass;
-        btn.textContent = 'Hide';
-    } else {
-        el.textContent = '••••••••';
-        btn.textContent = 'Show';
-    }
-}
-
-function openResetModal(type, id, name) {
-    document.getElementById('reset-type').value = type;
-    document.getElementById('reset-id').value = id;
-    document.getElementById('reset-title').textContent = `Set Password: ${name}`;
-    document.getElementById('reset-new-pass').value = '';
-    openModal('reset-password');
-}
-
-async function handleResetPassword(e) {
-    e.preventDefault();
-    const type = document.getElementById('reset-type').value;
-    const id = document.getElementById('reset-id').value;
-    const password = document.getElementById('reset-new-pass').value;
-    
-    // match singular endpoints (client, admin_user) for PUT actions
-    const endpoint = (type === 'client' ? 'client' : 'admin_user') + '&id=' + id;
-    
-    const d = await fetchAPI('admin?action=' + endpoint, {
-        method: 'PUT',
-        body: JSON.stringify({ password })
-    });
-    
-    if (d.success) {
-        closeModal('reset-password');
-        loadAdminData();
-    } else {
-        alert(d.message);
-    }
-}
-
-// ─── Utils ───
-function formatNum(n) { return n >= 1000 ? (n/1000).toFixed(1) + 'K' : n.toString(); }
-function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-</script>
+        function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    </script>
 </body>
 </html>
