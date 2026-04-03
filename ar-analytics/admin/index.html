@@ -527,7 +527,7 @@
                             <button class="btn btn-outline" style="padding:2px 8px;font-size:10px" onclick="toggleReveal('a' + '${a.id}', '${esc(a.password_plain || '******')}', true)">Show</button>
                         </div>
                     </td>
-                    <td><button class="btn btn-outline btn-sm" style="color:var(--accent-rose)" onclick="deleteEntry('admin', ${a.id})">X</button></td>
+                    <td><button class="btn btn-outline btn-sm" style="color:var(--accent-rose)" onclick="deleteEntry('admin_user', ${a.id})">X</button></td>
                 </tr>
             `).join('');
         }
