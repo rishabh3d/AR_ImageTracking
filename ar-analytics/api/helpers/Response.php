@@ -51,9 +51,12 @@ class Response {
     }
 
     /**
-     * Set JSON content type
+     * Set JSON content type and prevent browser caching
      */
     public static function json() {
         header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
     }
 }
