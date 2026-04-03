@@ -844,19 +844,24 @@
 
         // ─── Helpers & Utilities ───
         async function fetchAPI(endpoint, options = {}) {
-            const headers = { 'Content-Type': 'application/json' };
-            if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
 
-            const res = await fetch(`${API_BASE}api/controllers/${endpoint.split('?')[0]}.php${endpoint.includes('?') ? '?' + endpoint.split('?')[1] : ''}`, {
-                ...options, headers
-            });
-            
-            if (res.status === 401 || res.status === 403) {
-                handleLogout();
-                throw new Error('Unauthorized');
+                const res = await fetch(`${API_BASE}api/controllers/${endpoint.split('?')[0]}.php${endpoint.includes('?') ? '?' + endpoint.split('?')[1] : ''}`, {
+                    ...options, headers
+                });
+                
+                if ((res.status === 401 || res.status === 403) && !endpoint.includes('login')) {
+                    handleLogout();
+                    return { success: false, message: 'Session expired' };
+                }
+                
+                return await res.json();
+            } catch (err) {
+                console.error(err);
+                return { success: false, message: 'Server communication failed.' };
             }
-            
-            return res.json();
         }
 
         function switchTab(tab) {

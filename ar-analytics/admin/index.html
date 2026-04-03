@@ -127,6 +127,8 @@
         /* Toasts */
         .toast-container { position: fixed; bottom: 32px; right: 32px; z-index: 2000; display: flex; flex-direction: column; gap: 12px; }
         .toast { padding: 14px 20px; background: #111; color: #fff; border-radius: 8px; border-left: 4px solid var(--accent-purple); font-size: 13px; animation: slideIn 0.3s forwards; box-shadow: var(--shadow); }
+        .toast.error { border-left-color: var(--accent-rose); background: #2a0a0f; }
+        .toast.success { border-left-color: var(--accent-emerald); background: #061c10; }
         @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         /* Modals */
@@ -564,11 +566,18 @@
         }
 
         async function fetchAPI(endpoint, opts = {}) {
-            const head = { 'Content-Type': 'application/json' };
-            if (state.token) head['Authorization'] = 'Bearer ' + state.token;
-            const res = await fetch(`${API_BASE}api/controllers/${endpoint.split('?')[0]}.php${endpoint.includes('?') ? '?' + endpoint.split('?')[1] : ''}`, { ...opts, headers: head });
-            if (res.status === 401) handleLogout();
-            return res.json();
+            try {
+                const head = { 'Content-Type': 'application/json' };
+                if (state.token) head['Authorization'] = 'Bearer ' + state.token;
+                const path = endpoint.split('?')[0];
+                const query = endpoint.includes('?') ? '?' + endpoint.split('?')[1] : '';
+                const res = await fetch(`${API_BASE}api/controllers/${path}.php${query}`, { ...opts, headers: head });
+                if (res.status === 401 && !endpoint.includes('login')) { handleLogout(); return {success:false, message:'Session expired.'}; }
+                return await res.json();
+            } catch (err) {
+                console.error('FetchAPI Error:', err);
+                return { success: false, message: 'Server communication failed. Please check your data or try again.' };
+            }
         }
 
         function switchTab(t) {
