@@ -644,9 +644,19 @@
         }
 
         async function deleteEntry(type, id) {
-            if (!confirm(`Delete this ${type}? This action is destructive.`)) return;
+            const userInput = prompt(`CRITICAL WARNING: You are about to permanently delete this ${type.replace('_', ' ')}.\n\nTo confirm, please type the word DELETE below:`);
+            if (userInput !== 'DELETE') {
+                showToast('Deletion aborted.', 'info');
+                return;
+            }
+            
             const res = await fetchAPI(`admin?action=${type}&id=${id}`, { method: 'DELETE' });
-            if (res.success) { loadData(); showToast('Entry removed', 'info'); }
+            if (res.success) { 
+                loadData(); 
+                showToast('Entry permanently completely removed.', 'success'); 
+            } else {
+                showToast(res.message || 'Deletion failed.', 'error');
+            }
         }
 
         async function toggleStatus(type, id, cur) {
