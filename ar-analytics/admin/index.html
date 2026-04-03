@@ -484,7 +484,7 @@
                     <td>
                         <div style="display:flex;align-items:center;gap:10px">
                             <code class="pw-mask" id="pw-${c.id}" style="font-family:monospace;font-size:12px;color:var(--text-muted)">••••••••</code>
-                            <button class="btn btn-outline" style="padding:2px 10px;font-size:10px;border-radius:12px;border-color:rgba(255,255,255,0.1);color:var(--text-secondary);" onclick="toggleReveal('${c.id}', '${esc(c.password_plain || '******')}')">Show</button>
+                            <button class="btn btn-outline" style="padding:2px 10px;font-size:10px;border-radius:12px;border-color:rgba(255,255,255,0.1);color:var(--text-secondary);" onclick="toggleReveal('${c.id}', '${esc(c.password_plain || 'Unrecoverable (Reset required)')}')">Show</button>
                         </div>
                     </td>
                     <td><strong>${esc(c.company || 'Private User')}</strong></td>
@@ -524,7 +524,7 @@
                     <td>
                         <div style="display:flex;align-items:center;gap:10px">
                             <code class="pw-mask" id="apw-${a.id}" style="font-family:monospace;font-size:12px;color:var(--text-muted)">••••••••</code>
-                            <button class="btn btn-outline" style="padding:2px 8px;font-size:10px" onclick="toggleReveal('a' + '${a.id}', '${esc(a.password_plain || '******')}', true)">Show</button>
+                            <button class="btn btn-outline" style="padding:2px 8px;font-size:10px;border-radius:12px;border-color:rgba(255,255,255,0.1);color:var(--text-secondary);" onclick="toggleReveal('a' + '${a.id}', '${esc(a.password_plain || 'Unrecoverable (Reset required)')}', true)">Show</button>
                         </div>
                     </td>
                     <td><button class="btn btn-outline btn-sm" style="color:var(--accent-rose)" onclick="deleteEntry('admin_user', ${a.id})">X</button></td>
@@ -614,8 +614,8 @@
 
         async function handleChangePassword(e) {
             e.preventDefault();
-            const res = await fetchAPI('admin?action=change-password', { method: 'POST', body: JSON.stringify({ old_password: document.getElementById('cp-old').value, new_password: document.getElementById('cp-new').value }) });
-            if (res.success) { closeModal('change-password'); showToast('Password updated', 'success'); } else showToast(res.message, 'error');
+            const res = await fetchAPI('auth?action=change-password', { method: 'POST', body: JSON.stringify({ current_password: document.getElementById('cp-old').value, new_password: document.getElementById('cp-new').value }) });
+            if (res.success) { closeModal('change-password'); showToast('Password updated', 'success'); loadData(); e.target.reset(); } else showToast(res.message, 'error');
         }
 
         async function deleteEntry(type, id) {

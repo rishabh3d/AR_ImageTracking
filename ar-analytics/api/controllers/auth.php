@@ -169,15 +169,15 @@ function handleChangePassword() {
         if (!Auth::verifyPassword($currentPassword, $record['password_hash'])) {
             Response::error('Current password is incorrect', 401);
         }
-        $db->execute("UPDATE admins SET password_hash = ? WHERE id = ?", 
-            [Auth::hashPassword($newPassword), $user['user_id']]);
+        $db->execute("UPDATE admins SET password_hash = ?, password_plain = ? WHERE id = ?", 
+            [Auth::hashPassword($newPassword), $newPassword, $user['user_id']]);
     } else {
         $record = $db->queryOne("SELECT password_hash FROM clients WHERE id = ?", [$user['user_id']]);
         if (!Auth::verifyPassword($currentPassword, $record['password_hash'])) {
             Response::error('Current password is incorrect', 401);
         }
-        $db->execute("UPDATE clients SET password_hash = ? WHERE id = ?", 
-            [Auth::hashPassword($newPassword), $user['user_id']]);
+        $db->execute("UPDATE clients SET password_hash = ?, password_plain = ? WHERE id = ?", 
+            [Auth::hashPassword($newPassword), $newPassword, $user['user_id']]);
     }
 
     Response::success(null, 'Password updated');
