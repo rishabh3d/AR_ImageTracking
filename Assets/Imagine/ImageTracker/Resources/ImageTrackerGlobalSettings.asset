@@ -27,7 +27,7 @@ MonoBehaviour:
     texture: {fileID: 2800000, guid: aba25f718463f40caa47795087b8b0c5, type: 3}
   - id: Back
     texture: {fileID: 2800000, guid: e449ad314bde5465a8e9b120354bf7f9, type: 3}
-  - id: GYM Video Target
+  - id: CultGym
     texture: {fileID: 2800000, guid: 648133636efa0a24cb0c17a031f671b8, type: 3}
   settingsTemplates:
   - {fileID: 11400000, guid: 35c99cc7b662a46eb89cc7a32e239494, type: 2}
