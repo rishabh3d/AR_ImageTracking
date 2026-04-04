@@ -923,7 +923,7 @@ MonoBehaviour:
       detectZone: 0
     useExtraSmoothing: 0
     smoothenFactor: 10
-    debugMode: 0
+    debugMode: 1
   dontDeactivateOnLost: 0
   OnImageFound:
     m_PersistentCalls:
@@ -1537,8 +1537,8 @@ Transform:
   m_GameObject: {fileID: 1883564446}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.00197, y: 0.04259, z: -0.01}
-  m_LocalScale: {x: 1.5898461, y: 1.300699, z: 1}
+  m_LocalPosition: {x: 0, y: 0.04202, z: -0.01}
+  m_LocalScale: {x: 1.6289294, y: 1.325077, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5692853394113545561}
@@ -1569,7 +1569,7 @@ VideoPlayer:
   - {fileID: 0}
   m_DirectAudioVolumes:
   - 1
-  m_Url: https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_ImageTracking@main/videos/GYM%20Poster.mp4
+  m_Url: https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_ImageTracking@main/videos/GYM%20Poster%20Video%20A3%20First%20Frame.mp4
   m_EnabledAudioTracks: 01
   m_DirectAudioMutes: 00
   m_ControlledAudioTrackCount: 1
@@ -3255,7 +3255,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1 &4468563894318435543
 GameObject:
   m_ObjectHideFlags: 0
@@ -3853,6 +3853,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7079965049889353121, guid: 7c0edb1925b3f9143b9498a1622bef8e, type: 3}
       propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7757707868683614725, guid: 7c0edb1925b3f9143b9498a1622bef8e, type: 3}
+      propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
