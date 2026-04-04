@@ -1209,7 +1209,7 @@ VideoPlayer:
   - {fileID: 0}
   m_DirectAudioVolumes:
   - 1
-  m_Url: https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_ImageTracking@main/videos/Shoes_GreenScreen.mp4
+  m_Url: https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_ImageTracking@main/videos/GYM%20Poster%20Video%20A3%20First%20Frame.mp4
   m_EnabledAudioTracks: 01
   m_DirectAudioMutes: 00
   m_ControlledAudioTrackCount: 1
@@ -2152,8 +2152,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0.0017, y: 0.0027}
-  m_SizeDelta: {x: 1373.8232, y: 770.7512}
+  m_AnchoredPosition: {x: 0.00022, y: 0.00108}
+  m_SizeDelta: {x: 1371.7163, y: 773.0686}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &682869284552086797
 MeshRenderer:
@@ -3099,7 +3099,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2071865522490923957}
   m_LocalRotation: {x: 0.0000761528, y: 0.008726225, z: 0.008726225, w: 0.9999238}
-  m_LocalPosition: {x: 0, y: 0, z: -0.8}
+  m_LocalPosition: {x: 0, y: 0, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3107,7 +3107,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 1, z: 1}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 992, y: -682.9}
+  m_AnchoredPosition: {x: 947, y: -698}
   m_SizeDelta: {x: 614.9, y: 179.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &3474899478634370785
@@ -3203,8 +3203,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -48.99997, y: -114.00003}
-  m_SizeDelta: {x: 1050.2563, y: 600}
+  m_AnchoredPosition: {x: -0.52402055, y: -0.57482}
+  m_SizeDelta: {x: 2287.9, y: 1286.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!4 &3718799704438455755
 Transform:
@@ -3269,7 +3269,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 8577714372b454ceeb748cd3f63dfb5a, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
