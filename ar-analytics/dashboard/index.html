@@ -207,6 +207,25 @@
         .detail-bar-bg { height: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 4px; overflow: hidden; position: relative; }
         .detail-bar-fill { position: absolute; top: 0; left: 0; bottom: 0; background: var(--accent-cyan); border-radius: 4px; transition: width 1s ease-out; }
 
+        /* ─── Tooltips ─── */
+        .info-btn { 
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 16px; height: 16px; border-radius: 50%; 
+            background: rgba(255,255,255,0.1); color: var(--text-muted); 
+            font-size: 11px; font-weight: 700; font-style: normal; margin-left: 8px; 
+            cursor: help; position: relative; transition: var(--transition);
+        }
+        .info-btn:hover { background: var(--accent-cyan); color: #000; }
+        .info-btn .tooltip {
+            visibility: hidden; opacity: 0; position: absolute; bottom: 150%; left: 50%; transform: translateX(-50%);
+            width: max-content; max-width: 220px; padding: 10px 14px;
+            background: #111; color: #fff; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif;
+            text-transform: none; letter-spacing: normal; line-height: 1.5; border-radius: var(--radius-md);
+            border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            transition: opacity 0.2s; z-index: 100; pointer-events: none; text-align: left;
+        }
+        .info-btn:hover .tooltip { visibility: visible; opacity: 1; }
+
         /* ─── Skeleton Loaders ─── */
         .skeleton { background: linear-gradient(90deg, var(--bg-card) 25%, rgba(255,255,255,0.05) 50%, var(--bg-card) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -347,23 +366,23 @@
                 <!-- Stats Grid -->
                 <section class="stats-grid animate-fade delay-2">
                     <div class="stat-card glass">
-                        <div class="stat-label">Total Views</div>
+                        <div class="stat-label" style="display:flex;align-items:center;">Total Views <i class="info-btn">i<span class="tooltip">Total number of times your AR link or app was opened by any user.</span></i></div>
                         <div class="stat-value" id="stat-views">-</div>
                     </div>
                     <div class="stat-card glass">
-                        <div class="stat-label">Unique Visitors</div>
+                        <div class="stat-label" style="display:flex;align-items:center;">Unique Visitors <i class="info-btn">i<span class="tooltip">Distinct individuals (devices) that accessed your project, filtering out repeat opens by the same person.</span></i></div>
                         <div class="stat-value" id="stat-visitors">-</div>
                     </div>
                     <div class="stat-card glass">
-                        <div class="stat-label">AR Activations</div>
+                        <div class="stat-label" style="display:flex;align-items:center;">AR Activations <i class="info-btn">i<span class="tooltip">Number of successful AR tracking events (when the camera properly recognized your target).</span></i></div>
                         <div class="stat-value" id="stat-activations">-</div>
                     </div>
                     <div class="stat-card glass">
-                        <div class="stat-label">Avg Duration</div>
+                        <div class="stat-label" style="display:flex;align-items:center;">Avg Duration <i class="info-btn">i<span class="tooltip">Average time a user spends actively engaged before closing the experience.</span></i></div>
                         <div class="stat-value" id="stat-duration">-</div>
                     </div>
                     <div class="stat-card glass">
-                        <div class="stat-label">Return Rate</div>
+                        <div class="stat-label" style="display:flex;align-items:center;">Return Rate <i class="info-btn">i<span class="tooltip">Percentage of total users who have come back to view the experience more than once.</span></i></div>
                         <div class="stat-value" id="stat-return" style="color:var(--accent-cyan)">-</div>
                     </div>
                 </section>
@@ -373,7 +392,7 @@
                     <div class="card glass">
                         <div class="card-header">
                             <div>
-                                <div class="card-title">Views Over Time</div>
+                                <div class="card-title" style="display:flex;align-items:center;">Views Over Time <i class="info-btn">i<span class="tooltip">A chronological breakdown of when users are launching your AR experience. Use this to spot trends and traffic spikes.</span></i></div>
                                 <div class="card-subtitle">Daily session distribution</div>
                             </div>
                         </div>
@@ -385,7 +404,7 @@
                     <div class="card glass">
                         <div class="card-header">
                             <div>
-                                <div class="card-title">Platform Reach</div>
+                                <div class="card-title" style="display:flex;align-items:center;">Platform Reach <i class="info-btn">i<span class="tooltip">A breakdown of what hardware your viewers are using (Mobile vs Desktop, iOS vs Android), and how successfully they jump into Augmented Reality.</span></i></div>
                                 <div class="card-subtitle">Hardware & Scan metrics</div>
                             </div>
                         </div>
@@ -435,7 +454,10 @@
 
                 <div id="detail-panel" class="card glass detail-card animate-fade">
                     <div class="card-header">
-                        <h2 class="card-title" id="detail-title">Metrics Breakdown</h2>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <h2 class="card-title" id="detail-title" style="margin-bottom:0;">Metrics Breakdown</h2>
+                            <i class="info-btn">i<span class="tooltip" id="detail-tooltip">Select any category from the grid to drill deeper into the specific data driving your AR experience.</span></i>
+                        </div>
                     </div>
                     <div id="detail-content">
                         <!-- Content populated by JS -->
@@ -715,7 +737,23 @@
                 'screen-sizes': 'Display Resolutions',
                 'retention': 'User Retention (New vs Recurring)'
             };
-            title.textContent = titles[metric] || 'Metics';
+            const tooltips = {
+                devices: 'Check which smartphones, tablets, and operating systems are most popular among your users.',
+                browsers: 'See which web browsers (like Safari or Chrome) people are using to access your AR app.',
+                locations: 'Discover which countries and specific cities are driving the most traffic to your project.',
+                traffic: 'Track UTM parameters to see which specific marketing campaigns or links are working best.',
+                'ar-stats': 'See exactly which AR targets (like images or 3D models) got the most successful camera scans and Call-To-Action clicks.',
+                'sessions-list': 'A chronological log of recent user sessions, showing exactly when and how they connected.',
+                'peak-hours': 'Identify the busiest times of day for your AR experience (localized to your timezone).',
+                'languages': 'The primary device languages assigned to your audience.',
+                'screen-sizes': 'Common device screen resolutions, which helps you optimize your UI layout.',
+                'retention': 'See how many of your visitors are completely new vs users who are returning to your layout again.'
+            };
+            title.textContent = titles[metric] || 'Metrics Breakdown';
+            
+            const tooltipEl = document.getElementById('detail-tooltip');
+            if (tooltipEl) tooltipEl.textContent = tooltips[metric] || 'Select any category from the grid to drill deeper into the specific data driving your AR experience.';
+
 
             try {
                 let action = metric;
