@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.unity.formats.fbx": "4.2.1",
     "com.unity.feature.development": "1.0.2",
     "com.unity.ugui": "2.0.0",
     "com.unity.modules.accessibility": "1.0.0",
