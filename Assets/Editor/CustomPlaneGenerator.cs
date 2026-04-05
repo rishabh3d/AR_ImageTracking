@@ -41,6 +41,19 @@ public class CustomPlaneGenerator : EditorWindow
         width = EditorGUILayout.FloatField("Width (X)", width);
         length = EditorGUILayout.FloatField("Length/Height (Y or Z)", length);
         
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("Halve Size (/ 2)"))
+        {
+            width /= 2f;
+            length /= 2f;
+        }
+        if (GUILayout.Button("Double Size (* 2)"))
+        {
+            width *= 2f;
+            length *= 2f;
+        }
+        EditorGUILayout.EndHorizontal();
+
         EditorGUILayout.Space();
         scaleFactor = EditorGUILayout.FloatField("Scale Multiplier", scaleFactor);
         EditorGUILayout.HelpBox("Scale Multiplier converts your input values into Unity units (meters). Default 0.001 turns 1080 into 1.08 units.", MessageType.Info);
