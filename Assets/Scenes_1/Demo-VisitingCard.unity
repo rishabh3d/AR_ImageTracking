@@ -641,7 +641,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   trackerCam: {fileID: 963194229}
   imageTargets:
-  - id: VisitingCard
+  - id: The Vice Streets
     transform: {fileID: 7258572972890975955}
     targetPos: {x: 0, y: 0, z: 0}
     targetRot: {x: 0, y: 0, z: 0, w: 0}
@@ -1612,7 +1612,7 @@ GameObject:
   - component: {fileID: 3934927843735550966}
   - component: {fileID: 6195808797842214586}
   m_Layer: 0
-  m_Name: VisitingCard
+  m_Name: The Vice Streets
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
