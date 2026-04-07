@@ -25,8 +25,8 @@ MonoBehaviour:
     texture: {fileID: 2800000, guid: 8dd5d9ab5683db44fa0c70ce2ba63494, type: 3}
   - id: Shoes
     texture: {fileID: 2800000, guid: aba25f718463f40caa47795087b8b0c5, type: 3}
-  - id: Back
-    texture: {fileID: 2800000, guid: e449ad314bde5465a8e9b120354bf7f9, type: 3}
+  - id: VisitingCard
+    texture: {fileID: 2800000, guid: 8577714372b454ceeb748cd3f63dfb5a, type: 3}
   - id: CultGym
     texture: {fileID: 2800000, guid: 648133636efa0a24cb0c17a031f671b8, type: 3}
   settingsTemplates:
