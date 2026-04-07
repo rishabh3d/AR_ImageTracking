@@ -510,6 +510,7 @@
             currentProject: null,
             currentRange: '7d',
             currentTab: 'overview',
+            currentExplorerMetric: null,
             chart: null
         };
 
@@ -567,6 +568,9 @@
                     btn.classList.add('active');
                     state.currentRange = btn.dataset.range;
                     loadData();
+                    if (state.currentTab === 'explorer' && state.currentExplorerMetric) {
+                        fetchDetail(state.currentExplorerMetric);
+                    }
                 };
             });
         }
@@ -718,8 +722,9 @@
 
         // ─── Explorer Logic ───
         async function fetchDetail(metric) {
+            state.currentExplorerMetric = metric;
             document.querySelectorAll('.metric-item').forEach(i => i.classList.remove('active'));
-            const targetEl = event.currentTarget;
+            const targetEl = document.querySelector(`.metric-item[onclick*="'${metric}'"]`);
             if (targetEl) targetEl.classList.add('active');
 
             const panel = document.getElementById('detail-panel');
@@ -891,7 +896,7 @@
                 if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
 
                 const res = await fetch(`${API_BASE}api/controllers/${endpoint.split('?')[0]}.php${endpoint.includes('?') ? '?' + endpoint.split('?')[1] : ''}`, {
-                    ...options, headers
+                    ...options, headers, cache: 'no-store'
                 });
                 
                 if ((res.status === 401 || res.status === 403) && !endpoint.includes('login')) {
