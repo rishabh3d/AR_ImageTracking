@@ -118,9 +118,9 @@ function handleOverview($db, $projectId, $dateFrom) {
         [$projectId, $dateFrom]
     );
 
-    // AR scans (image found events)
+    // AR scans (image found events) - unique sessions
     $arScans = $db->scalar(
-        "SELECT COUNT(*) FROM events WHERE project_id = ? AND event_type = 'ar_image_found' AND created_at >= ?",
+        "SELECT COUNT(DISTINCT session_id) FROM events WHERE project_id = ? AND event_type = 'ar_image_found' AND created_at >= ?",
         [$projectId, $dateFrom]
     );
 
@@ -273,9 +273,9 @@ function handleARStats($db, $projectId, $dateFrom) {
         [$projectId, $dateFrom]
     );
 
-    // Most scanned targets
+    // Most scanned targets (unique sessions per target)
     $targets = $db->query(
-        "SELECT JSON_UNQUOTE(JSON_EXTRACT(event_data, '$.target_id')) as target_id, COUNT(*) as count
+        "SELECT JSON_UNQUOTE(JSON_EXTRACT(event_data, '$.target_id')) as target_id, COUNT(DISTINCT session_id) as count
          FROM events WHERE project_id = ? AND event_type = 'ar_image_found' AND created_at >= ?
          GROUP BY target_id ORDER BY count DESC LIMIT 10",
         [$projectId, $dateFrom]
