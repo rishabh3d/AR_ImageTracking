@@ -569,7 +569,7 @@ MonoBehaviour:
   special: 0
   clear: 0
   maxHeight: 0
-  ring: {fileID: 2063722249338234123}
+  ring: {fileID: 100000, guid: 0097dbbaed1297746853450babef8ff9, type: 3}
   audioSource: {fileID: 0}
 --- !u!1 &963194225
 GameObject:
@@ -584,6 +584,7 @@ GameObject:
   - component: {fileID: 963194226}
   - component: {fileID: 963194229}
   - component: {fileID: 963194231}
+  - component: {fileID: 963194232}
   m_Layer: 0
   m_Name: ARCamera
   m_TagString: MainCamera
@@ -712,6 +713,22 @@ MonoBehaviour:
   firstCanvas: {fileID: 0}
   startButton: {fileID: 0}
   backButton: {fileID: 1131144450}
+--- !u!114 &963194232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b3f4cbab9bda401ca4a49ac89bf7321, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GyroCamera
+  gameWorld: {fileID: 3455286771444081789}
+  OnGyroIsNotSupported:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1088328894
 GameObject:
   m_ObjectHideFlags: 0
@@ -743,7 +760,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7258572972890975955}
-  - {fileID: 865332943452852675}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1088328896
@@ -1497,7 +1513,7 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
+  MinDistance: 0.09272199
   MaxDistance: 500
   Pan2D: 0
   rolloffMode: 0
@@ -1582,11 +1598,11 @@ Transform:
   m_GameObject: {fileID: 8134402320766923745}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.021601329, z: 0.074999996}
+  m_LocalPosition: {x: -8, y: -0.5, z: 1.6}
   m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 1088328895}
+  m_Father: {fileID: 7258572972890975955}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &867643958563860702
 MeshRenderer:
@@ -3931,6 +3947,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3455286771444081789}
+  - {fileID: 865332943452852675}
   m_Father: {fileID: 1088328895}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!64 &7346274197023097966
