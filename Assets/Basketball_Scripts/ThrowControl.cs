@@ -9,6 +9,8 @@ public class ThrowControl : MonoBehaviour
 	public float resetBallAfterSeconds = 5f;
 	public float lerpTimeFactorOnTouch = 7f;
 	public float cameraNearClipPlaneFactor = 7.5f;
+	public float ballViewportX = 0.5f;
+	public float ballViewportY = 0.1f;
 
 	public bool isThrowBackAvailable = false;
 
@@ -35,11 +37,16 @@ public class ThrowControl : MonoBehaviour
 	private bool isInputEnded = false;
 	private bool isInputLast = false;
 
+	private Vector3 initialLocalPosition;
+	private Quaternion initialLocalRotation;
 
 	void Start() 
 	{
 		_rigidbody = GetComponent<Rigidbody> ();
 		ballControl = GetComponent<BallControl>();
+
+		initialLocalPosition = transform.localPosition;
+		initialLocalRotation = transform.localRotation;
 
 		Reset ();
 	}
@@ -109,9 +116,9 @@ public class ThrowControl : MonoBehaviour
 	{
 		CancelInvoke ();
 
-		transform.position = Camera.main.ViewportToWorldPoint (
-			new Vector3 (0.5f, 0.1f, Camera.main.nearClipPlane * cameraNearClipPlaneFactor)
-		);
+		transform.SetParent (Camera.main.transform);
+		transform.localPosition = initialLocalPosition;
+		transform.localRotation = initialLocalRotation;
 		
 		newBallPosition = transform.position;
 
@@ -120,14 +127,11 @@ public class ThrowControl : MonoBehaviour
 		_rigidbody.useGravity = false;
 		_rigidbody.linearVelocity = Vector3.zero;
 		_rigidbody.angularVelocity = Vector3.zero;
-
-		transform.rotation = Quaternion.Euler (0f, 200f, 0f);
-		transform.SetParent (Camera.main.transform);
 	}
 
 	void OnTouch() 
 	{
-		inputPositionCurrent.z = Camera.main.nearClipPlane * cameraNearClipPlaneFactor;
+		inputPositionCurrent.z = initialLocalPosition.z;
 
 		newBallPosition = Camera.main.ScreenToWorldPoint (inputPositionCurrent);
 
@@ -146,11 +150,10 @@ public class ThrowControl : MonoBehaviour
 
 		inputPositionDifference.y = (inputPosition.y - inputPositionPivot.y) / Screen.height * sensivity.y;
 
-		inputPositionDifference.x = (inputPosition.x - inputPositionPivot.x) / Screen.width;
-		inputPositionDifference.x = 
-			Mathf.Abs (inputPosition.x - inputPositionPivot.x) / Screen.width * sensivity.x * inputPositionDifference.x;
+		// Ignore X swipe to ensure ball goes straight
+		inputPositionDifference.x = 0; 
 
-		direction = new Vector3 (inputPositionDifference.x, 0f, 1f);
+		direction = new Vector3 (0f, 0f, 1f);
 		direction = Camera.main.transform.TransformDirection (direction);
 
 		_rigidbody.AddForce((direction + Vector3.up) * speed * inputPositionDifference.y);
