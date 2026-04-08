@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6a5f42ab6d5b79b48a328627a965e323
+timeCreated: 1439811344
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 78645
+  packageName: AR Basketball GO
+  packageVersion: 1.0
+  assetPath: Assets/AR Basketball GO/PhysMaterials/ball.physicMaterial
+  uploadId: 153316

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1fed96b93e09f9344b0a7dcf7b2d8c1d
+timeCreated: 1439802729
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 78645
+  packageName: AR Basketball GO
+  packageVersion: 1.0
+  assetPath: Assets/AR Basketball GO/PhysMaterials/floor.physicMaterial
+  uploadId: 153316

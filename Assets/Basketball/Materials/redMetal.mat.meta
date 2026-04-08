@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ab5bcefc5b0b0a048ad0509457656cde
+timeCreated: 1439804025
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 78645
+  packageName: AR Basketball GO
+  packageVersion: 1.0
+  assetPath: Assets/AR Basketball GO/Materials/redMetal.mat
+  uploadId: 153316

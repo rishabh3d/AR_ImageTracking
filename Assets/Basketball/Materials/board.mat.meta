@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f5fcd2880744bc94cb622dc086d904cf
+timeCreated: 1439803965
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 78645
+  packageName: AR Basketball GO
+  packageVersion: 1.0
+  assetPath: Assets/AR Basketball GO/Materials/board.mat
+  uploadId: 153316

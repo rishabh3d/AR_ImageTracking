@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 59c94903ef97fec43b409f697ae2a276
+timeCreated: 1439803895
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 78645
+  packageName: AR Basketball GO
+  packageVersion: 1.0
+  assetPath: Assets/AR Basketball GO/Materials/nets/net3color.mat
+  uploadId: 153316

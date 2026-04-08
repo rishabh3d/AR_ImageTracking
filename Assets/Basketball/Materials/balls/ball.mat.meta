@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 31c2d1dcf6c9bd442b6654cd94ab960a
+timeCreated: 1442924000
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 78645
+  packageName: AR Basketball GO
+  packageVersion: 1.0
+  assetPath: Assets/AR Basketball GO/Materials/balls/ball.mat
+  uploadId: 153316

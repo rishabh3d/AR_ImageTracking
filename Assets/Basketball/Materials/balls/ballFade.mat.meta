@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4994c5e4259440948ae1a4a54e826bd2
+timeCreated: 1442924094
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 78645
+  packageName: AR Basketball GO
+  packageVersion: 1.0
+  assetPath: Assets/AR Basketball GO/Materials/balls/ballFade.mat
+  uploadId: 153316
