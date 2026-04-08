@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class SoundController : MonoBehaviour {
@@ -20,13 +20,13 @@ public class SoundController : MonoBehaviour {
 	private AudioSource thisAudio;
 	private bool playedNR;
 	
-	void Start () {
+	void Awake () {
 		data = this;
 		thisAudio = GetComponent<AudioSource>();
 	}
 	
 	public void Stop(){
-		if(thisAudio.isPlaying) {
+		if(thisAudio != null && thisAudio.isPlaying) {
 			thisAudio.Stop();
 			thisAudio.clip = null;
 			thisAudio.loop = false;
@@ -34,7 +34,7 @@ public class SoundController : MonoBehaviour {
 	}
 	
 	public void playBallInWind(){
-		if(!thisAudio.isPlaying) {
+		if(thisAudio != null && !thisAudio.isPlaying && ballInWind != null) {
 			thisAudio.clip = ballInWind;
 			thisAudio.loop = true;
 			thisAudio.Play();
@@ -42,23 +42,23 @@ public class SoundController : MonoBehaviour {
 	}
 	
 	public void playGoal(){
-		thisAudio.PlayOneShot(goal);
+		if (thisAudio != null && goal != null) thisAudio.PlayOneShot(goal);
 	}
 	
 	public void playClearGoal(){
-		thisAudio.PlayOneShot(goalClear);
+		if (thisAudio != null && goalClear != null) thisAudio.PlayOneShot(goalClear);
 	}
 	
 	public void playClearSpecialGoal(){
-		thisAudio.PlayOneShot(goalClearSpecial);
+		if (thisAudio != null && goalClearSpecial != null) thisAudio.PlayOneShot(goalClearSpecial);
 	}
 	
 	public void playNewRecord(){
-		thisAudio.PlayOneShot(newRecord);
+		if (thisAudio != null && newRecord != null) thisAudio.PlayOneShot(newRecord);
 	}
 	
 	public void playGameOver(){
-		thisAudio.PlayOneShot(gameOver);
+		if (thisAudio != null && gameOver != null) thisAudio.PlayOneShot(gameOver);
 	}
 	
 }

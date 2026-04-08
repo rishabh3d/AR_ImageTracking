@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 //This script works with its ball. Inter alia it sends an events to any listeners about its actions like thorowed, goaled, failed.
@@ -75,7 +75,10 @@ public class BallControl : MonoBehaviour
 		if(OnThrow != null)
 			OnThrow();
 
-		audioSource.PlayOneShot(SoundController.data.ballWoofs[Random.Range(0,SoundController.data.ballWoofs.Length)],1);
+		if (audioSource != null && SoundController.data != null && SoundController.data.ballWoofs != null && SoundController.data.ballWoofs.Length > 0)
+		{
+			audioSource.PlayOneShot(SoundController.data.ballWoofs[Random.Range(0, SoundController.data.ballWoofs.Length)], 1);
+		}
 	}
 	
 	public void SetGoaled()
@@ -131,7 +134,7 @@ public class BallControl : MonoBehaviour
 					passed1 = true;
 			break;
 			case "trigger2":
-				PlayRandomClip(SoundController.data.ballImpactNet);
+				if (SoundController.data != null) PlayRandomClip(SoundController.data.ballImpactNet);
 				passed2 = true;
 				if(passed1)
 					thisRigidbody.linearDamping = thisRigidbody.linearVelocity.magnitude/2;
@@ -158,7 +161,7 @@ public class BallControl : MonoBehaviour
 			case "ring":
 			
 				clear = false; 
-				PlayRandomClip(SoundController.data.ballImpactRing);
+				if (SoundController.data != null) PlayRandomClip(SoundController.data.ballImpactRing);
 			break;
 			
 			case "floor":
@@ -173,17 +176,17 @@ public class BallControl : MonoBehaviour
 					print("failed, floor");
 				}
 
-				PlayRandomClip(SoundController.data.ballImpactFloor);
+				if (SoundController.data != null) PlayRandomClip(SoundController.data.ballImpactFloor);
 				break;
 
 			case "board":
-				PlayRandomClip(SoundController.data.ballImpactSheet);
+				if (SoundController.data != null) PlayRandomClip(SoundController.data.ballImpactSheet);
 			break;
 			case "pole":
-				PlayRandomClip(SoundController.data.ballImpactPole);
+				if (SoundController.data != null) PlayRandomClip(SoundController.data.ballImpactPole);
 			break;
 			case "net":
-				PlayRandomClip(SoundController.data.ballImpactNet);
+				if (SoundController.data != null) PlayRandomClip(SoundController.data.ballImpactNet);
 			break;
 			
 		}
@@ -191,6 +194,9 @@ public class BallControl : MonoBehaviour
 	
 	void PlayRandomClip(AudioClip[] clips)
 	{
+		if (audioSource == null || clips == null || clips.Length == 0)
+			return;
+
 		float speed = Mathf.Clamp(thisRigidbody.linearVelocity.magnitude, 0, 15);
 		
 		audioSource.pitch = 1.15f - speed / 50;
