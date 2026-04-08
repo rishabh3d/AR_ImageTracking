@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 5fd6ffd7162e341a2be4b9a71f7ff8db
+timeCreated: 1472732017
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 78645
+  packageName: AR Basketball GO
+  packageVersion: 1.0
+  assetPath: Assets/AR Basketball GO/Scripts/CameraAsBackground.cs
+  uploadId: 153316
