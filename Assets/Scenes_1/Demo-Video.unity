@@ -976,9 +976,9 @@ MonoBehaviour:
     maxSimultaneousTargets: 1
     targetFrameRate: 30
     advancedSettings:
-      maxFrameLength: 450
+      maxFrameLength: 500
       maxFrameArea: 80
-      trackedPoints: 60
+      trackedPoints: 80
       poseCorrectionInterval: 1500
       detectInterval: 200
       detectability: 0.5
