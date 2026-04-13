@@ -13,6 +13,9 @@ public class CDNARVideoController : MonoBehaviour
     [Tooltip("If true, the video will continuously loop. If false, it stops and waits for a re-track.")]
     public bool loopVideo = true;
 
+    [Tooltip("Optional: A GameObject (like a loading spinner or UI text) to display while the video is buffering.")]
+    public GameObject loadingIndicator;
+
     private VideoPlayer videoPlayer;
     private bool hasFinished = false;
 
@@ -87,6 +90,7 @@ public class CDNARVideoController : MonoBehaviour
                     if (movingFrames > 5)
                     {
                         videoRenderer.enabled = true;
+                        if (loadingIndicator != null) loadingIndicator.SetActive(false);
                     }
                 }
             }
@@ -94,6 +98,7 @@ public class CDNARVideoController : MonoBehaviour
             {
                 movingFrames = 0;
                 lastRecordedTimeForCheck = -1;
+                if (loadingIndicator != null) loadingIndicator.SetActive(true);
             }
         }
 
@@ -115,6 +120,12 @@ public class CDNARVideoController : MonoBehaviour
         {
             videoRenderer.enabled = false;
         }
+        
+        if (loadingIndicator != null)
+        {
+            loadingIndicator.SetActive(true); // Show loading spinner
+        }
+
         movingFrames = 0;
         lastRecordedTimeForCheck = -1;
 
@@ -151,6 +162,11 @@ public class CDNARVideoController : MonoBehaviour
 
     private void OnDisable()
     {
+        if (loadingIndicator != null)
+        {
+            loadingIndicator.SetActive(false);
+        }
+
         if (videoPlayer != null && videoPlayer.isPlaying)
         {
             videoPlayer.Pause();
