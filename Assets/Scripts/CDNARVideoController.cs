@@ -20,7 +20,8 @@ public class CDNARVideoController : MonoBehaviour
     private bool isResuming = false;
     
     private Renderer videoRenderer;
-    private int framesSincePlay = 0;
+    private double lastRecordedTimeForCheck = -1;
+    private int movingFrames = 0;
 
     private void Awake()
     {
@@ -68,16 +69,31 @@ public class CDNARVideoController : MonoBehaviour
         {
             if (videoPlayer.isPrepared && videoPlayer.isPlaying)
             {
-                framesSincePlay++;
-                // 5 frames delay guarantees the WebGL video texture is flushed to the GPU
-                if (framesSincePlay > 5)
+                if (lastRecordedTimeForCheck < 0)
                 {
-                    videoRenderer.enabled = true;
+                    lastRecordedTimeForCheck = videoPlayer.time;
+                }
+                else
+                {
+                    // Check if time actually changed from the last frame. 
+                    // This mathematically proves the WebGL HTML5 video has finished network buffering and is rolling.
+                    if (System.Math.Abs(videoPlayer.time - lastRecordedTimeForCheck) > 0.001)
+                    {
+                        movingFrames++;
+                        lastRecordedTimeForCheck = videoPlayer.time;
+                    }
+                    
+                    // Allow 5 distinct advancing frames before flipping the display on
+                    if (movingFrames > 5)
+                    {
+                        videoRenderer.enabled = true;
+                    }
                 }
             }
             else
             {
-                framesSincePlay = 0;
+                movingFrames = 0;
+                lastRecordedTimeForCheck = -1;
             }
         }
 
@@ -99,7 +115,8 @@ public class CDNARVideoController : MonoBehaviour
         {
             videoRenderer.enabled = false;
         }
-        framesSincePlay = 0;
+        movingFrames = 0;
+        lastRecordedTimeForCheck = -1;
 
         // If the user disabled 'resume', or the video was finished previously, reset time to 0
         if (hasFinished || !resumeVideoOnRetrack)
