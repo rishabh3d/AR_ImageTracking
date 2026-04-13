@@ -7,6 +7,9 @@ public class CDNARVideoController : MonoBehaviour
     [Tooltip("Optional: URL of the CDN-hosted video (e.g., .mp4 or .webm). Can also be assigned directly in the VideoPlayer component.")]
     public string cdnVideoUrl;
 
+    [Tooltip("If true, the video resumes from exactly where it got paused. If false, it simply restarts from 0.0s every time the image is scanned.")]
+    public bool resumeVideoOnRetrack = true;
+
     private VideoPlayer videoPlayer;
     private bool hasFinished = false;
 
@@ -55,7 +58,8 @@ public class CDNARVideoController : MonoBehaviour
     {
         if (videoPlayer == null) videoPlayer = GetComponent<VideoPlayer>();
 
-        if (hasFinished)
+        // If the user disabled 'resume', or the video was finished previously, reset time to 0
+        if (hasFinished || !resumeVideoOnRetrack)
         {
             savedTime = 0;
             hasFinished = false;
