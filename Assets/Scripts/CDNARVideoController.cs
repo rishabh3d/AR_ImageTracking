@@ -32,6 +32,7 @@ public class CDNARVideoController : MonoBehaviour
         
         videoPlayer.loopPointReached += OnVideoEndReached;
         videoPlayer.prepareCompleted += OnPrepareCompleted;
+        videoPlayer.errorReceived += OnVideoError; // Very important for WebGL debugging
     }
 
     private void OnDestroy()
@@ -40,7 +41,13 @@ public class CDNARVideoController : MonoBehaviour
         {
             videoPlayer.loopPointReached -= OnVideoEndReached;
             videoPlayer.prepareCompleted -= OnPrepareCompleted;
+            videoPlayer.errorReceived -= OnVideoError;
         }
+    }
+
+    private void OnVideoError(VideoPlayer source, string message)
+    {
+        Debug.LogError($"[CDNARVideoController] WebGL Video Error: {message}. Please check if the CDN allows CORS and if the video format is supported by the browser.");
     }
 
     private void Update()
