@@ -794,7 +794,7 @@ MonoBehaviour:
     useExtraSmoothing: 0
     smoothenFactor: 10
     debugMode: 0
-  dontDeactivateOnLost: 0
+  dontDeactivateOnLost: 1
   OnImageFound:
     m_PersistentCalls:
       m_Calls: []
@@ -1160,6 +1160,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CDNARVideoController
   cdnVideoUrl: 
+  resumeVideoOnRetrack: 1
 --- !u!1 &1556143936
 GameObject:
   m_ObjectHideFlags: 0
@@ -2967,6 +2968,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CDNARVideoController
   cdnVideoUrl: 
+  resumeVideoOnRetrack: 1
 --- !u!4 &4920612203342951909
 Transform:
   m_ObjectHideFlags: 0
@@ -2995,6 +2997,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CDNARVideoController
   cdnVideoUrl: 
+  resumeVideoOnRetrack: 1
 --- !u!224 &4931851460583170405
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4309,6 +4312,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CDNARVideoController
   cdnVideoUrl: 
+  resumeVideoOnRetrack: 1
 --- !u!33 &8796926651407937430
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -4366,6 +4370,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CDNARVideoController
   cdnVideoUrl: 
+  resumeVideoOnRetrack: 1
 --- !u!1 &8822603856268657612
 GameObject:
   m_ObjectHideFlags: 0
@@ -4493,6 +4498,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CDNARVideoController
   cdnVideoUrl: 
+  resumeVideoOnRetrack: 1
 --- !u!64 &9081504196584571684
 MeshCollider:
   m_ObjectHideFlags: 0

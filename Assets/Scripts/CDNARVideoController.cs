@@ -15,10 +15,18 @@ public class CDNARVideoController : MonoBehaviour
 
     private double savedTime = 0;
     private bool isResuming = false;
+    
+    private Renderer videoRenderer;
+    private int framesSincePlay = 0;
 
     private void Awake()
     {
         videoPlayer = GetComponent<VideoPlayer>();
+        videoRenderer = GetComponent<Renderer>();
+        if (videoRenderer == null)
+        {
+            videoRenderer = GetComponentInChildren<Renderer>();
+        }
         
         // Ensure streaming config is optimized for CDN use.
         videoPlayer.source = VideoSource.Url;
@@ -52,6 +60,24 @@ public class CDNARVideoController : MonoBehaviour
 
     private void Update()
     {
+        // Prevent white plane flash by hiding the renderer until the video starts pushing frames
+        if (videoRenderer != null && !videoRenderer.enabled)
+        {
+            if (videoPlayer.isPrepared && videoPlayer.isPlaying)
+            {
+                framesSincePlay++;
+                // 5 frames delay guarantees the WebGL video texture is flushed to the GPU
+                if (framesSincePlay > 5)
+                {
+                    videoRenderer.enabled = true;
+                }
+            }
+            else
+            {
+                framesSincePlay = 0;
+            }
+        }
+
         // VITAL: Native VideoPlayers can lose their 'time' memory immediately upon being disabled.
         // Reading videoPlayer.time in OnDisable is often too late (reads as 0). 
         // We continuously cache it safely here while it is playing.
@@ -64,6 +90,13 @@ public class CDNARVideoController : MonoBehaviour
     private void OnEnable()
     {
         if (videoPlayer == null) videoPlayer = GetComponent<VideoPlayer>();
+
+        // Hide renderer instantly upon retrack to hide the white gap
+        if (videoRenderer != null)
+        {
+            videoRenderer.enabled = false;
+        }
+        framesSincePlay = 0;
 
         // If the user disabled 'resume', or the video was finished previously, reset time to 0
         if (hasFinished || !resumeVideoOnRetrack)
