@@ -794,7 +794,7 @@ MonoBehaviour:
     useExtraSmoothing: 0
     smoothenFactor: 10
     debugMode: 0
-  dontDeactivateOnLost: 1
+  dontDeactivateOnLost: 0
   OnImageFound:
     m_PersistentCalls:
       m_Calls: []

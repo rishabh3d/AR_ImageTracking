@@ -10,6 +10,9 @@ public class CDNARVideoController : MonoBehaviour
     [Tooltip("If true, the video resumes from exactly where it got paused. If false, it simply restarts from 0.0s every time the image is scanned.")]
     public bool resumeVideoOnRetrack = true;
 
+    [Tooltip("If true, the video will continuously loop. If false, it stops and waits for a re-track.")]
+    public bool loopVideo = true;
+
     private VideoPlayer videoPlayer;
     private bool hasFinished = false;
 
@@ -36,7 +39,7 @@ public class CDNARVideoController : MonoBehaviour
         }
 
         videoPlayer.playOnAwake = false;
-        videoPlayer.isLooping = false;
+        videoPlayer.isLooping = loopVideo;
         
         videoPlayer.loopPointReached += OnVideoEndReached;
         videoPlayer.prepareCompleted += OnPrepareCompleted;
@@ -139,6 +142,8 @@ public class CDNARVideoController : MonoBehaviour
 
     private void OnVideoEndReached(VideoPlayer vp)
     {
+        if (loopVideo) return; // Allow native looping to continue
+
         // 4. When the video reaches the end -> Reset properly.
         hasFinished = true;
         savedTime = 0; // Ensures it starts at 0 next time
