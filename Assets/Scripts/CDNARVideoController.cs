@@ -19,35 +19,67 @@ public class CDNARVideoController : MonoBehaviour
     private VideoPlayer videoPlayer;
     private bool hasFinished = false;
 
-    private double savedTime = 0;
-    private bool isResuming = false;
-    
     private Renderer videoRenderer;
     private double lastRecordedTimeForCheck = -1;
     private int movingFrames = 0;
 
     private void Awake()
     {
-        videoPlayer = GetComponent<VideoPlayer>();
+        VideoPlayer originalVP = GetComponent<VideoPlayer>();
         videoRenderer = GetComponent<Renderer>();
         if (videoRenderer == null)
         {
             videoRenderer = GetComponentInChildren<Renderer>();
         }
         
-        // Ensure streaming config is optimized for CDN use.
-        videoPlayer.source = VideoSource.Url;
+        // --- PERSISTENT PLAYER TRICK ---
+        // By detaching the video player onto a permanent object, we keep the WebGL buffer fully alive
+        // even when the AR image tracker disables this GameObject.
+        GameObject persistentObj = new GameObject("PersistentVP_" + gameObject.name);
+        DontDestroyOnLoad(persistentObj);
+        
+        videoPlayer = persistentObj.AddComponent<VideoPlayer>();
+        
+        // Clone essential properties
         if (!string.IsNullOrEmpty(cdnVideoUrl))
-        {
             videoPlayer.url = cdnVideoUrl;
-        }
-
+        else
+            videoPlayer.url = originalVP.url;
+            
+        videoPlayer.source = originalVP.source;
+        videoPlayer.clip = originalVP.clip;
         videoPlayer.playOnAwake = false;
         videoPlayer.isLooping = loopVideo;
+        videoPlayer.renderMode = originalVP.renderMode;
+        
+        videoPlayer.audioOutputMode = originalVP.audioOutputMode;
+        if (originalVP.audioOutputMode == VideoAudioOutputMode.AudioSource)
+        {
+            videoPlayer.EnableAudioTrack(0, originalVP.IsAudioTrackEnabled(0));
+            videoPlayer.SetTargetAudioSource(0, originalVP.GetTargetAudioSource(0));
+        }
+
+        if (originalVP.renderMode == VideoRenderMode.MaterialOverride)
+        {
+            // Re-point the new video player to our AR plane renderer
+            videoPlayer.targetMaterialRenderer = originalVP.targetMaterialRenderer != null ? originalVP.targetMaterialRenderer : videoRenderer;
+            videoPlayer.targetMaterialProperty = originalVP.targetMaterialProperty;
+        }
+        else if (originalVP.renderMode == VideoRenderMode.RenderTexture)
+        {
+            videoPlayer.targetTexture = originalVP.targetTexture;
+        }
+        
+        // Shut down the original one so it doesn't conflict
+        originalVP.playOnAwake = false;
+        originalVP.enabled = false;
         
         videoPlayer.loopPointReached += OnVideoEndReached;
         videoPlayer.prepareCompleted += OnPrepareCompleted;
         videoPlayer.errorReceived += OnVideoError; // Very important for WebGL debugging
+
+        // Auto-prepare in the background IMMEDIATELY when the scene loads!
+        videoPlayer.Prepare();
     }
 
     private void OnDestroy()
@@ -101,19 +133,11 @@ public class CDNARVideoController : MonoBehaviour
                 if (loadingIndicator != null) loadingIndicator.SetActive(true);
             }
         }
-
-        // VITAL: Native VideoPlayers can lose their 'time' memory immediately upon being disabled.
-        // Reading videoPlayer.time in OnDisable is often too late (reads as 0). 
-        // We continuously cache it safely here while it is playing.
-        if (videoPlayer != null && videoPlayer.isPlaying && !hasFinished)
-        {
-            savedTime = videoPlayer.time;
-        }
     }
 
     private void OnEnable()
     {
-        if (videoPlayer == null) videoPlayer = GetComponent<VideoPlayer>();
+        if (videoPlayer == null) return; // Happens momentarily before Awake completes
 
         // Hide renderer instantly upon retrack to hide the white gap
         if (videoRenderer != null)
@@ -129,34 +153,23 @@ public class CDNARVideoController : MonoBehaviour
         movingFrames = 0;
         lastRecordedTimeForCheck = -1;
 
-        // If the user disabled 'resume', or the video was finished previously, reset time to 0
         if (hasFinished || !resumeVideoOnRetrack)
         {
-            savedTime = 0;
             hasFinished = false;
+            videoPlayer.time = 0;
         }
 
-        if (!videoPlayer.isPrepared)
-        {
-            // Unity loses the video state when disabled. Prepare it first!
-            isResuming = true;
-            videoPlayer.Prepare();
-        }
-        else
-        {
-            // Set playback active FIRST, then forcibly restore time (safest for WebGL)
-            videoPlayer.Play();
-            videoPlayer.time = savedTime;
-        }
+        // Because the VideoPlayer is persistent in the background, its internal memory remembers exactly where it paused!
+        // Calling Play() resumes INSTANTLY with ZERO network buffering required after the first time.
+        videoPlayer.Play();
     }
 
     private void OnPrepareCompleted(VideoPlayer vp)
     {
-        if (isResuming)
+        // If it finally finished background preparation and the AR image is currently being tracked, play!
+        if (gameObject.activeInHierarchy)
         {
             videoPlayer.Play();
-            videoPlayer.time = savedTime;
-            isResuming = false;
         }
     }
 
@@ -179,7 +192,6 @@ public class CDNARVideoController : MonoBehaviour
 
         // 4. When the video reaches the end -> Reset properly.
         hasFinished = true;
-        savedTime = 0; // Ensures it starts at 0 next time
         vp.Pause();
         vp.time = 0;
     }
