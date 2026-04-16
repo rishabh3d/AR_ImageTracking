@@ -29,6 +29,8 @@ MonoBehaviour:
     texture: {fileID: 2800000, guid: 8577714372b454ceeb748cd3f63dfb5a, type: 3}
   - id: CultGym
     texture: {fileID: 2800000, guid: 648133636efa0a24cb0c17a031f671b8, type: 3}
+  - id: BookCover
+    texture: {fileID: 2800000, guid: ac5363bd4410aa14a8f52ffbba4a592f, type: 3}
   settingsTemplates:
   - {fileID: 11400000, guid: 35c99cc7b662a46eb89cc7a32e239494, type: 2}
   - {fileID: 11400000, guid: 9cf415d375f91458483df57436950575, type: 2}
