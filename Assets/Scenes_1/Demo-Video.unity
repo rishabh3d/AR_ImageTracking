@@ -311,7 +311,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 636617197}
-  m_Mesh: {fileID: 4300000, guid: a5341eb91313a57499e2de53b17edaf3, type: 2}
+  m_Mesh: {fileID: 4300000, guid: 4c1fae99e8ed5df4b99edcc165961e18, type: 2}
 --- !u!1 &671570540
 GameObject:
   m_ObjectHideFlags: 0
@@ -1263,6 +1263,8 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  fastLoadMode: 0
+  antiFlickerThreshold: 2
 --- !u!1 &1556143936
 GameObject:
   m_ObjectHideFlags: 0
@@ -1533,8 +1535,8 @@ Transform:
   m_GameObject: {fileID: 1777823124}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.01}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0.0042, y: 0.1958, z: -0.01}
+  m_LocalScale: {x: 2.2720633, y: 1.7384421, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 636617198}
@@ -1555,6 +1557,8 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  fastLoadMode: 0
+  antiFlickerThreshold: 2
 --- !u!328 &1777823127
 VideoPlayer:
   m_ObjectHideFlags: 0
@@ -1647,7 +1651,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1777823124}
-  m_Mesh: {fileID: 4300000, guid: a5341eb91313a57499e2de53b17edaf3, type: 2}
+  m_Mesh: {fileID: 4300000, guid: 4c1fae99e8ed5df4b99edcc165961e18, type: 2}
 --- !u!1 &1788991433
 GameObject:
   m_ObjectHideFlags: 0
@@ -3086,7 +3090,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &4468563894318435543
 GameObject:
   m_ObjectHideFlags: 0
@@ -3217,6 +3221,8 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  fastLoadMode: 0
+  antiFlickerThreshold: 2
 --- !u!4 &4920612203342951909
 Transform:
   m_ObjectHideFlags: 0
@@ -3248,6 +3254,8 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  fastLoadMode: 0
+  antiFlickerThreshold: 2
 --- !u!224 &4931851460583170405
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4565,6 +4573,8 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  fastLoadMode: 0
+  antiFlickerThreshold: 2
 --- !u!33 &8796926651407937430
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -4625,6 +4635,8 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  fastLoadMode: 0
+  antiFlickerThreshold: 2
 --- !u!1 &8822603856268657612
 GameObject:
   m_ObjectHideFlags: 0
@@ -4755,6 +4767,8 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  fastLoadMode: 0
+  antiFlickerThreshold: 2
 --- !u!64 &9081504196584571684
 MeshCollider:
   m_ObjectHideFlags: 0
