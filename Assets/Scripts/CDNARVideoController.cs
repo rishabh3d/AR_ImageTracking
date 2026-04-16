@@ -16,6 +16,13 @@ public class CDNARVideoController : MonoBehaviour
     [Tooltip("Optional: A GameObject (like a loading spinner or UI text) to display while the video is buffering.")]
     public GameObject loadingIndicator;
 
+    [Header("Performance Settings")]
+    [Tooltip("If true, the video shows immediately when tracked. This is faster but might cause a momentary white flash.")]
+    public bool fastLoadMode = false;
+
+    [Tooltip("How much video progress to wait for before showing. Higher = safer from white flash, Lower = faster appearance.")]
+    public float antiFlickerThreshold = 2.0f;
+
     private VideoPlayer videoPlayer;
     private bool hasFinished = false;
 
@@ -99,6 +106,17 @@ public class CDNARVideoController : MonoBehaviour
 
     private void Update()
     {
+        // If Fast Load is on, we don't wait for frame counting
+        if (fastLoadMode)
+        {
+            if (videoPlayer.isPrepared && !videoRenderer.enabled)
+            {
+                videoRenderer.enabled = true;
+                if (loadingIndicator != null) loadingIndicator.SetActive(false);
+            }
+            return;
+        }
+
         // Prevent white plane flash by hiding the renderer until the video starts pushing frames
         if (videoRenderer != null && !videoRenderer.enabled)
         {
@@ -111,15 +129,14 @@ public class CDNARVideoController : MonoBehaviour
                 else
                 {
                     // Check if time actually changed from the last frame. 
-                    // This mathematically proves the WebGL HTML5 video has finished network buffering and is rolling.
                     if (System.Math.Abs(videoPlayer.time - lastRecordedTimeForCheck) > 0.001)
                     {
                         movingFrames++;
                         lastRecordedTimeForCheck = videoPlayer.time;
                     }
                     
-                    // Allow 5 distinct advancing frames before flipping the display on
-                    if (movingFrames > 5)
+                    // Use the custom threshold from the inspector
+                    if (movingFrames >= antiFlickerThreshold)
                     {
                         videoRenderer.enabled = true;
                         if (loadingIndicator != null) loadingIndicator.SetActive(false);
@@ -139,10 +156,10 @@ public class CDNARVideoController : MonoBehaviour
     {
         if (videoPlayer == null) return; // Happens momentarily before Awake completes
 
-        // Hide renderer instantly upon retrack to hide the white gap
+        // Hide renderer instantly upon retrack to hide the white gap (only in stable mode)
         if (videoRenderer != null)
         {
-            videoRenderer.enabled = false;
+            videoRenderer.enabled = fastLoadMode; // If fast load is on, leave it enabled
         }
         
         if (loadingIndicator != null)
