@@ -1657,6 +1657,7 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  overlayUI: {fileID: 0}
   fastLoadMode: 0
   antiFlickerThreshold: 2
 --- !u!1 &1556143936
@@ -1951,6 +1952,7 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  overlayUI: {fileID: 1447101854}
   fastLoadMode: 0
   antiFlickerThreshold: 2
 --- !u!328 &1777823127
@@ -3615,6 +3617,7 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  overlayUI: {fileID: 0}
   fastLoadMode: 0
   antiFlickerThreshold: 2
 --- !u!4 &4920612203342951909
@@ -3648,6 +3651,7 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  overlayUI: {fileID: 0}
   fastLoadMode: 0
   antiFlickerThreshold: 2
 --- !u!224 &4931851460583170405
@@ -4967,6 +4971,7 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  overlayUI: {fileID: 0}
   fastLoadMode: 0
   antiFlickerThreshold: 2
 --- !u!33 &8796926651407937430
@@ -5029,6 +5034,7 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  overlayUI: {fileID: 0}
   fastLoadMode: 0
   antiFlickerThreshold: 2
 --- !u!1 &8822603856268657612
@@ -5161,6 +5167,7 @@ MonoBehaviour:
   resumeVideoOnRetrack: 1
   loopVideo: 1
   loadingIndicator: {fileID: 0}
+  overlayUI: {fileID: 0}
   fastLoadMode: 0
   antiFlickerThreshold: 2
 --- !u!64 &9081504196584571684

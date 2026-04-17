@@ -16,6 +16,9 @@ public class CDNARVideoController : MonoBehaviour
     [Tooltip("Optional: A GameObject (like a loading spinner or UI text) to display while the video is buffering.")]
     public GameObject loadingIndicator;
 
+    [Tooltip("Optional: A UI Panel or GameObject (buttons, descriptions) that should appear only when the video is visible.")]
+    public GameObject overlayUI;
+
     [Header("Performance Settings")]
     [Tooltip("If true, the video shows immediately when tracked. This is faster but might cause a momentary white flash.")]
     public bool fastLoadMode = false;
@@ -113,6 +116,7 @@ public class CDNARVideoController : MonoBehaviour
             {
                 videoRenderer.enabled = true;
                 if (loadingIndicator != null) loadingIndicator.SetActive(false);
+                if (overlayUI != null) overlayUI.SetActive(true);
             }
             return;
         }
@@ -140,6 +144,7 @@ public class CDNARVideoController : MonoBehaviour
                     {
                         videoRenderer.enabled = true;
                         if (loadingIndicator != null) loadingIndicator.SetActive(false);
+                        if (overlayUI != null) overlayUI.SetActive(true);
                     }
                 }
             }
@@ -165,6 +170,11 @@ public class CDNARVideoController : MonoBehaviour
         if (loadingIndicator != null)
         {
             loadingIndicator.SetActive(true); // Show loading spinner
+        }
+
+        if (overlayUI != null)
+        {
+            overlayUI.SetActive(false); // Hide overlay until video ready
         }
 
         movingFrames = 0;
@@ -195,6 +205,11 @@ public class CDNARVideoController : MonoBehaviour
         if (loadingIndicator != null)
         {
             loadingIndicator.SetActive(false);
+        }
+
+        if (overlayUI != null)
+        {
+            overlayUI.SetActive(false);
         }
 
         if (videoPlayer != null && videoPlayer.isPlaying)
