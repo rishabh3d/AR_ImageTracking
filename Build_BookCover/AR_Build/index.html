@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content='width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=yes'>
+    <title>ARRISE | Rionick Studios</title>
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <style>
+        html{
+            height: -webkit-fill-available;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            width: 100vw;
+            overflow: hidden;
+        }
+        .ctaDiv {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background: #fffa;
+            z-index: 99;
+        }
+        /* ---- ADVANCED LOADING SCREEN STYLES ---- */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes textPulse {
+            0%, 100% { text-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff; transform: scale(1); }
+            50% { text-shadow: 0 0 20px #00d2ff, 0 0 40px #00d2ff; transform: scale(1.05); }
+        }
+        @keyframes ringSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes barGlow {
+            0%, 100% { box-shadow: 0 0 10px #00d2ff; }
+            50% { box-shadow: 0 0 25px #00d2ff, 0 0 40px #3a7bd5; }
+        }
+        #advanced-loader {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #0e1a38);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+        .loader-title {
+            color: #ffffff;
+            font-size: 28px;
+            letter-spacing: 6px; /* Space added for futuristic look */
+            margin-bottom: 50px;
+            text-transform: uppercase;
+            text-align: center;
+            font-weight: 800;
+            animation: textPulse 2s infinite ease-in-out;
+            padding-left: 6px; /* Offset the letter-spacing to perfectly center */
+        }
+        .loader-center-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 50px;
+            width: 150px;
+            height: 150px;
+        }
+        .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-top: 4px solid #00d2ff;
+            border-bottom: 4px solid #3a7bd5;
+            border-radius: 50%;
+            animation: ringSpin 2s linear infinite;
+        }
+        #percentage-text {
+            color: #ffffff;
+            font-size: 38px;
+            font-weight: 900;
+            text-shadow: 0 4px 15px rgba(0,210,255,0.6);
+            z-index: 2;
+            margin: 0;
+        }
+        .progress-container {
+            width: 70%;
+            max-width: 450px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        #advanced-progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 50%, #00d2ff 100%);
+            background-size: 200% 100%;
+            border-radius: 20px;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: barGlow 2s infinite alternate;
+        }
+    </style>
+</head>
+<body>
+    <!--IMAGETARGETS-->
+		<imagetarget id='BookCover' src='targets/Book_Cover_AR_Target_Image.png'></imagetarget>
+
+    <!-- ADVANCED LOADING UI -->
+    <div id="advanced-loader">
+        <div class="loader-title">Loading AR Experience</div>
+        
+        <div class="loader-center-group">
+            <div class="spinner-ring"></div>
+            <div id="percentage-text">0%</div>
+        </div>
+        <div class="progress-container">
+            <div id="advanced-progress-bar"></div>
+        </div>
+    </div>
+    <video id="webcam-video" muted autoplay playsinline style="width:1px;position:absolute"></video>
+    <!-- <video id="webcam-video" muted autoplay playsinline style="width:100%; height:100%; object-fit:cover; position:absolute"></video> -->
+    <canvas id="video-canvas" style="width:100%; height:100%; object-fit:cover; position:absolute"></canvas>
+    <div id="startARDiv" class="ctaDiv" style="display: none;">
+        <select id="chooseCamSel" style="display: none;" onchange="SelectCam()"></select>
+        <p style="text-align: center; width:60vw;">This augmented reality experience requires access to your device's camera</p>
+        <button id="startARButton" onclick="StartAR()" style="display:none">ALLOW ACCESS</button>
+    </div>
+    <div id="screenshotDiv" style="display: none;" class="ctaDiv">
+        <div style="position:relative; background-color:white; padding:10px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.3), 0 6px 20px 0 rgba(0, 0, 0, 0.25);">
+            <img id="screenshotImg" src="" alt="screenshot" style="width:80vw; height:80vh">
+            <button onclick="document.getElementById('screenshotDiv').style.display = 'none';" style="position:absolute; transform:translateY(-100%); right:0; top:0">Close</button>
+        </div>
+    </div>
+    <div id="confirmUrlDiv" style="display: none;" class="ctaDiv">
+        <div style="position:relative; background-color:white; padding:10px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.3), 0 6px 20px 0 rgba(0, 0, 0, 0.25); width: 80vw; display:flex; flex-direction: column; align-items: center;">
+            <p id="confirmUrlText" style="text-align: center; width:80%; overflow: hidden; text-overflow: ellipsis;">Are you sure you want to visit url.com?</p>
+            <div>
+                <button onclick="window.open(newUrlString, '_blank').focus(); document.getElementById('confirmUrlDiv').style.display = 'none'">VISIT SITE</button>
+                <button onclick="document.getElementById('confirmUrlDiv').style.display = 'none'">GO BACK</button>
+            </div>
+        </div>
+    </div>
+    <div id="errorDiv" class="ctaDiv" style="display: none; background:#aaa">
+        <p id="errorText" style="text-align: center; width:60vw; color:white"></p>
+    </div>
+    <div id="unity-container" class="unity-mobile">
+        <canvas id="unity-canvas" style="width: 100%; height: 100%; background: #0000; z-index: -99; touch-action: none;"></canvas>
+        <div id="unity-loading-bar">
+            <div id="unity-logo"></div>
+            <div id="unity-progress-bar-empty">
+                <div id="unity-progress-bar-full"></div>
+            </div>
+        </div>
+        <canvas id="video-canvas"></canvas>
+    </div>
+    <!-- AR Analytics Tracker -->
+    <script src="https://dashboard.rionick.com/tracker/ar-analytics.js" data-project="e4cfcb9cfd6d120305bb7c268a981b8e8a65c32d0d5062563c8e2c1980ae769c"></script>
+    <script src="arcamera.js" type="text/javascript"></script>
+    <script src="itracker.js" type="text/javascript"></script>
+    <script src="Build/AR_Build.loader.js"></script>
+    <script>
+            var initialize = async() =>{
+                var unityCanvas = document.querySelector("#unity-canvas");
+                var videoCanvas = document.querySelector("#video-canvas");
+                window.arCamera = new ARCamera(unityCanvas, videoCanvas);
+                window.iTracker = new ImageTracker(arCamera);
+                try{
+                    await window.iTracker.initialize();
+                    console.log("ImageTracker initialized!");
+                }
+                catch(error){
+                    console.error("Failed to initialize ImageTracker. Are you missing opencv.js? " + error);
+                    ShowError("Failed to initialize the experience.");
+                    return;
+                }
+                
+                await LoadWebcams();
+                StartAR(); // Automatically called instead of waiting for user click
+            }
+            initialize();
+            var container = document.querySelector("#unity-container");
+            var canvas = document.querySelector("#unity-canvas");
+            var loadingBar = document.querySelector("#unity-loading-bar");
+            var progressBarFull = document.querySelector("#unity-progress-bar-full");
+            function StartAR() {
+                canvas.style.width = window.innerWidth + "px";
+                canvas.style.height = window.innerHeight + "px";
+                
+                document.getElementById("startARDiv").style.display = "none";
+                createUnityInstance(document.querySelector("#unity-canvas"), {
+                    dataUrl: "Build/AR_Build.data.unityweb",
+                    frameworkUrl: "Build/AR_Build.framework.js.unityweb",
+                    codeUrl: "Build/AR_Build.wasm.unityweb",
+                    streamingAssetsUrl: "StreamingAssets",
+                    companyName: "DefaultCompany",
+                    productName: "AR_imageTracking",
+                    productVersion: "0.1",
+                    //webglContextAttributes: { "preserveDrawingBuffer": true },
+                    // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
+                    // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
+                    },
+                    (progress) => {
+                        // Unity progress goes from 0 to 0.9 during download, then jumps to 1.0 when starting.
+                        // Mapping 0-0.9 to 0-100% ensures the bar reaches the end smoothly.
+                        var displayProgress = Math.min(1, progress / 0.9);
+                        var percent = Math.round(displayProgress * 100);
+                        
+                        if (progressBarFull) progressBarFull.style.width = percent + "%";
+                        
+                        // Advanced loader logic
+                        var advBar = document.getElementById('advanced-progress-bar');
+                        if (advBar) advBar.style.width = percent + "%";
+                        
+                        var pctText = document.getElementById('percentage-text');
+                        if (pctText) pctText.innerText = percent + "%";
+                        // Optional: Change title text when initializing
+                        if (progress >= 0.9) {
+                            var title = document.querySelector('.loader-title');
+                            if (title && title.innerText !== "Starting Experience...") {
+                                title.innerText = "Starting Experience...";
+                            }
+                        }
+                    }
+                ).then((unityInstance) => {
+                    window.unityInstance = unityInstance;
+                    RequestWebcam();
+                    loadingBar.style.display = "none";
+                    var advLoader = document.getElementById('advanced-loader');
+                    if (advLoader) advLoader.style.display = "none";
+                });
+                loadingBar.style.display = "block";
+            }
+            //Set Facing Mode here ('environment', 'user', '')
+		window.unityFacingMode = "environment"
+            window.WEBCAM_SETTINGS = {
+                video: {
+                    facingMode: unityFacingMode,
+                },
+                audio: false
+            };
+            window.requestingForPermissions = false;
+            async function RequestWebcam(){
+                window.requestingForPermissions = true;
+                try{
+                    window.webcamStream = await navigator.mediaDevices.getUserMedia(window.WEBCAM_SETTINGS);
+                    console.log("Webcam access granted");
+                    requestingForPermissions = false;
+                }
+                catch (err) {
+                    //user denied camera permission - show error panel
+                    console.error("getUserMedia error - " , err);
+                    ShowError("Failed to start the experience. Camera permission was denied");
+                    window.requestingForPermissions = false;
+                }           
+            }
+            async function StartWebcam(){
+                console.log("StartWebcam")
+                while (window.requestingForPermissions) {
+                    // Wait until requestingForPermissions becomes true.
+                    console.log("Waiting for permissions...");
+                    await new Promise(resolve => setTimeout(resolve, 100)); // Adjust the delay time as needed.
+                }
+                console.log("Got Permissions");
+                if(window.webcamStream)
+                {
+                    const video = document.querySelector("#webcam-video");
+                    video.srcObject = webcamStream;
+                    try {
+                        await arCamera.startWebcam(video);
+                        console.log("Webcam started successfully");
+                        window.unityInstance.SendMessage('ARCamera', 'OnStartWebcamSuccess');
+                    }
+                    catch(err){
+                        console.error("Webcam failed to start - ", err);
+                        window.unityInstance.SendMessage('ARCamera', 'OnStartWebcamFail');
+                    }   
+                }
+                else{
+                    console.error("Webcam failed to start - permission not yet granted");
+                    window.unityInstance.SendMessage('ARCamera', 'OnStartWebcamFail');
+                }  
+            }
+            async function LoadWebcams(){
+                let camDevices = [];
+                // let backCams = [];
+                let devices = await navigator.mediaDevices.enumerateDevices();
+                var ctr = 0;
+                devices.forEach(mediaDevice => {
+                    if (mediaDevice.kind === 'videoinput') {
+                        if(window.unityFacingMode == 'environment' && !mediaDevice.label.includes('facing front')){
+                            //back cam only
+                            camDevices.push(mediaDevice);
+                        }
+                        else if(window.unityFacingMode == 'user' && mediaDevice.label.includes('facing front')){
+                            //front cam only
+                            camDevices.push(mediaDevice);
+                        }
+                        else{
+                            //back and front
+                            camDevices.push(mediaDevice);
+                        }   
+                        
+                        ctr++;
+                    }
+                });
+                var select = document.getElementById("chooseCamSel");
+                select.style.display = "block";
+                var count = 0;
+                //reverse array because some Android phones can't distinguish front and back cams at first load
+                //and when this happens, most of the time, front cam goes first and back cam goes last
+                camDevices = camDevices.reverse();
+                camDevices.forEach(mediaDevice => {
+                    const option = document.createElement('option');
+                    option.value = mediaDevice.deviceId;
+                    let label = `Camera ${count}`;
+                    if (mediaDevice.label) {
+                        label = mediaDevice.label
+                    }
+                    const textNode = document.createTextNode(label);
+                    option.appendChild(textNode);
+                    select.appendChild(option);
+                    count++;
+                });
+                iTracker.WEBCAM_NAME = select.options[select.selectedIndex].innerHTML;
+            }
+            function SelectCam(){
+                var select = document.getElementById("chooseCamSel");
+                window.deviceId = select.value;
+                window.WEBCAM_SETTINGS.video['deviceId'] = deviceId;
+                //console.log(window.WEBCAM_SETTINGS);
+                iTracker.WEBCAM_NAME = select.options[select.selectedIndex].innerHTML;
+            }
+            async function FlipCam(){
+                arCamera.stopWebcam();
+                window.WEBCAM_SETTINGS.video.deviceId = '';
+                if(window.WEBCAM_SETTINGS.video.facingMode == 'user'){
+                    window.WEBCAM_SETTINGS.video.facingMode = 'environment';
+                    arCamera.setFlipped(false);
+                }
+                else{
+                    window.WEBCAM_SETTINGS.video.facingMode = 'user';
+                    arCamera.setFlipped(true);
+                }
+                window.webcamStream = await navigator.mediaDevices.getUserMedia(window.WEBCAM_SETTINGS);
+                const video = document.querySelector("#webcam-video");
+                video.srcObject = webcamStream;
+                await arCamera.startWebcam(video);
+            }
+            function ShowError(error){
+                document.getElementById("errorDiv").style.display = "flex";
+                document.getElementById("errorText").innerHTML = error;
+            }
+            function ShowScreenshot(dataUrl){
+                document.getElementById("screenshotDiv").style.display = "flex";
+                document.getElementById("screenshotImg").src = dataUrl;
+                document.getElementById("screenshotImg").style.width = "80vw";
+                document.getElementById("screenshotImg").style.height = 80 / window.innerWidth * window.innerHeight + "vw";
+            }
+            function ShowConfirmUrl(url){
+                window.location.assign(url);                
+            }
+            window.ITRACKER_GLOBALS = {
+                //place global settings here
+                INTERNAL_SMOOTHFACTOR_POS: .075,
+            }
+            
+    </script>
+</body>
+</html>
