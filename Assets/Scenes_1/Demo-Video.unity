@@ -683,8 +683,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 1, z: 1}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 739, y: -483}
-  m_SizeDelta: {x: 290, y: 114}
+  m_AnchoredPosition: {x: 736, y: -491}
+  m_SizeDelta: {x: 290, y: 95}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &955753328
 MonoBehaviour:
@@ -751,7 +751,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: https://www.facebook.com/shantanu.shrivastava.3388
+          m_StringArgument: https://www.amazon.in/King-Gluttony-Ana-Huang-ebook/dp/B0F3K2KJGR
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &955753330
@@ -1233,8 +1233,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 1, z: 1}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 739, y: -611}
-  m_SizeDelta: {x: 290, y: 114}
+  m_AnchoredPosition: {x: 735, y: -604}
+  m_SizeDelta: {x: 290, y: 95}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1386863397
 MonoBehaviour:
@@ -1301,7 +1301,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: https://www.youtube.com/@thevicestreets
+          m_StringArgument: https://www.amazon.in/King-Gluttony-Ana-Huang-ebook/dp/B0F3K2KJGR
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1386863399
