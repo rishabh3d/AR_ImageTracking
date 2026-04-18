@@ -1981,7 +1981,7 @@ VideoPlayer:
   - {fileID: 0}
   m_DirectAudioVolumes:
   - 1
-  m_Url: https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_ImageTracking@main/videos/BookCoverArGreenScreenWebm.webm
+  m_Url: https://cdn.jsdelivr.net/gh/prashant1998gupta/AR_ImageTracking@main/videos/BookCoverArGreenScreen.mp4
   m_EnabledAudioTracks: 01
   m_DirectAudioMutes: 00
   m_ControlledAudioTrackCount: 1
@@ -2016,7 +2016,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: bd36d37030f06fe45afcc18ef98af3f4, type: 2}
+  - {fileID: 2100000, guid: a5de351c297b54743ad47f3d0acebad9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
