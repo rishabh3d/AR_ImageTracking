@@ -112,7 +112,7 @@ public class CDNARVideoController : MonoBehaviour
         // If Fast Load is on, we don't wait for frame counting
         if (fastLoadMode)
         {
-            if (videoPlayer.isPrepared && !videoRenderer.enabled)
+            if (videoPlayer.isPrepared && !videoRenderer.enabled && IsVideoTextureReady())
             {
                 videoRenderer.enabled = true;
                 if (loadingIndicator != null) loadingIndicator.SetActive(false);
@@ -140,7 +140,9 @@ public class CDNARVideoController : MonoBehaviour
                     }
                     
                     // Use the custom threshold from the inspector
-                    if (movingFrames >= antiFlickerThreshold)
+                    // ALSO verify the video texture is actually on the material,
+                    // otherwise the chroma key shader sees white and won't clip anything.
+                    if (movingFrames >= antiFlickerThreshold && IsVideoTextureReady())
                     {
                         videoRenderer.enabled = true;
                         if (loadingIndicator != null) loadingIndicator.SetActive(false);
@@ -155,6 +157,35 @@ public class CDNARVideoController : MonoBehaviour
                 if (loadingIndicator != null) loadingIndicator.SetActive(true);
             }
         }
+    }
+
+    /// <summary>
+    /// Checks if the video texture has been written to the material.
+    /// Without this, the chroma key shader may see the default white texture
+    /// and fail to make the green screen transparent.
+    /// </summary>
+    private bool IsVideoTextureReady()
+    {
+        if (videoRenderer == null) return false;
+
+        // For MaterialOverride mode, the VideoPlayer writes directly to _MainTex
+        Material mat = videoRenderer.material;
+        if (mat == null) return false;
+
+        Texture tex = mat.mainTexture;
+        // A valid video texture will be non-null and larger than the default placeholder (usually 4x4 or 8x8)
+        if (tex != null && tex.width > 16 && tex.height > 16)
+        {
+            return true;
+        }
+
+        // For RenderTexture mode, check the videoPlayer's texture output directly
+        if (videoPlayer.texture != null && videoPlayer.texture.width > 16)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private void OnEnable()
