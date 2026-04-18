@@ -30,6 +30,9 @@ SubShader {
             struct v2f {
                 float4 vertex : SV_POSITION;
                 float2 texcoord : TEXCOORD0;
+                // Pass precomputed mask CbCr + thresholds from vertex shader
+                // so the fragment shader doesn't recalculate per-pixel.
+                half4 chromaParams : TEXCOORD2; // xy = mask CbCr, z = S², w = 1/(F²-S²)
                 UNITY_FOG_COORDS(1)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -38,7 +41,6 @@ SubShader {
             float4 _MainTex_ST;
             fixed _Cutoff;
             fixed _Feather;
-
 
             float4 _MaskCol;
             float _Sensitivity;
@@ -50,45 +52,39 @@ SubShader {
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.texcoord = TRANSFORM_TEX(v.texcoord, _MainTex);
+
+                // Precompute mask color CbCr ONCE per vertex instead of per pixel.
+                // For a quad (4 vertices) this runs 4 times vs. millions of times per pixel.
+                half MCr = 0.5 + 0.5*_MaskCol.r - 0.418688*_MaskCol.g - 0.081312*_MaskCol.b;
+                half MCb = 0.5 + (-0.168736)*_MaskCol.r - 0.331264*_MaskCol.g + 0.5*_MaskCol.b;
+                half S2 = _Sensitivity * _Sensitivity;
+                half F2 = _Feather * _Feather;
+                // Precompute reciprocal to avoid division in fragment shader
+                half invRange = (F2 > S2) ? (1.0 / (F2 - S2)) : 100000.0;
+                o.chromaParams = half4(MCr, MCb, S2, invRange);
+
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                fixed4 c = tex2D(_MainTex, i.texcoord);
+                half4 c = tex2D(_MainTex, i.texcoord);
 
-                // float maskY = 0.2989 * _MaskCol.r + 0.5866 * _MaskCol.g + 0.1145 * _MaskCol.b;
-		        // float maskCr = 0.7132 * (_MaskCol.r - maskY);
- 		        // float maskCb = 0.5647 * (_MaskCol.b - maskY);
- 
-		        // float Y = 0.2989 * c.r + 0.5866 * c.g + 0.1145 * c.b;
- 		        // float Cr = 0.7132 * (c.r - Y);
- 		        // float Cb = 0.5647 * (c.b - Y);
+                // Convert pixel to CbCr (skip Y — we don't need luminance for chroma keying)
+                half Cr = 0.5 + 0.5*c.r - 0.418688*c.g - 0.081312*c.b;
+                half Cb = 0.5 + (-0.168736)*c.r - 0.331264*c.g + 0.5*c.b;
 
-                float MY = 0.2989*_MaskCol.r + 0.5866*_MaskCol.g + 0.1145*_MaskCol.b;
-                float MCr = 0.5 + 0.5*_MaskCol.r - 0.418688*_MaskCol.g - 0.081312*_MaskCol.b;
-                float MCb = 0.5 + -0.168736*_MaskCol.r - 0.331264*_MaskCol.g + 0.5*_MaskCol.b;
-  
-                float Y = 0.2989 * c.r + 0.5866 * c.g + 0.1145 * c.b;
-                float Cr = 0.5 + 0.5*c.r - 0.418688*c.g - 0.081312*c.b;
-                float Cb = 0.5 + -0.168736*c.r - 0.331264*c.g + 0.5*c.b;
+                // Squared distance in CbCr space from the mask color
+                half2 delta = half2(Cr - i.chromaParams.x, Cb - i.chromaParams.y);
+                half sqDist = dot(delta, delta);
 
-                 // float dist = distance(float2(Cr, Cb), float2(MCr, MCb));
-                 float sqDist = (Cr - MCr)*(Cr - MCr) + (Cb - MCb)*(Cb - MCb);
-
-
-                float S2 = _Sensitivity * _Sensitivity;
-                float F2 = _Feather * _Feather;
-                float d = 1;
-                if(sqDist < S2) d = 0;
-                else if(sqDist < F2) d = (sqDist-S2)/(F2-S2);
-                 
-                // float blendValue = smoothstep(_Sensitivity, _Sensitivity, dist);
+                // Branchless feathering — no if/else, no GPU warp divergence.
+                // saturate clamps to [0,1] which is a free operation on most GPUs.
+                half d = saturate((sqDist - i.chromaParams.z) * i.chromaParams.w);
 
                 clip(d - _Cutoff);
-                return c;//float4(sqDist, sqDist, sqDist, 1);
-
+                return c;
             }
         ENDCG
     }
