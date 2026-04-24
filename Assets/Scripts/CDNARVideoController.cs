@@ -44,6 +44,17 @@ public class CDNARVideoController : MonoBehaviour
     private int movingFrames = 0;
     private AudioSource targetAudioSource;
     private Coroutine pendingAudioRestoreCoroutine;
+    private Coroutine pendingVisibilityRecoveryCoroutine;
+    private VideoRenderMode configuredRenderMode;
+    private Renderer configuredTargetRenderer;
+    private string configuredTargetMaterialProperty;
+    private RenderTexture configuredTargetTexture;
+    private bool pendingSeekAfterPrepare;
+    private double pendingSeekTime;
+    private int visibilityRecoveryAttempts;
+
+    private const float VisibilityRecoveryDelaySeconds = 0.8f;
+    private const int MaxVisibilityRecoveryAttemptsPerTrack = 1;
 
     private void Awake()
     {
@@ -57,6 +68,15 @@ public class CDNARVideoController : MonoBehaviour
         if (videoRenderer == null)
         {
             videoRenderer = GetComponentInChildren<Renderer>();
+        }
+
+        configuredRenderMode = originalVP.renderMode;
+        configuredTargetRenderer = originalVP.targetMaterialRenderer != null ? originalVP.targetMaterialRenderer : videoRenderer;
+        configuredTargetMaterialProperty = originalVP.targetMaterialProperty;
+        configuredTargetTexture = originalVP.targetTexture;
+        if (configuredTargetRenderer != null)
+        {
+            videoRenderer = configuredTargetRenderer;
         }
         
         // --- PERSISTENT PLAYER TRICK ---
@@ -77,7 +97,7 @@ public class CDNARVideoController : MonoBehaviour
         videoPlayer.clip = originalVP.clip;
         videoPlayer.playOnAwake = false;
         videoPlayer.isLooping = loopVideo;
-        videoPlayer.renderMode = originalVP.renderMode;
+        videoPlayer.renderMode = configuredRenderMode;
         
         videoPlayer.audioOutputMode = originalVP.audioOutputMode;
         if (originalVP.audioOutputMode == VideoAudioOutputMode.AudioSource)
@@ -87,16 +107,7 @@ public class CDNARVideoController : MonoBehaviour
             videoPlayer.SetTargetAudioSource(0, targetAudioSource);
         }
 
-        if (originalVP.renderMode == VideoRenderMode.MaterialOverride)
-        {
-            // Re-point the new video player to our AR plane renderer
-            videoPlayer.targetMaterialRenderer = originalVP.targetMaterialRenderer != null ? originalVP.targetMaterialRenderer : videoRenderer;
-            videoPlayer.targetMaterialProperty = originalVP.targetMaterialProperty;
-        }
-        else if (originalVP.renderMode == VideoRenderMode.RenderTexture)
-        {
-            videoPlayer.targetTexture = originalVP.targetTexture;
-        }
+        RebindVideoOutputTargets();
         
         // Shut down the original one so it doesn't conflict
         originalVP.playOnAwake = false;
@@ -117,6 +128,18 @@ public class CDNARVideoController : MonoBehaviour
             videoPlayer.loopPointReached -= OnVideoEndReached;
             videoPlayer.prepareCompleted -= OnPrepareCompleted;
             videoPlayer.errorReceived -= OnVideoError;
+        }
+
+        if (pendingAudioRestoreCoroutine != null)
+        {
+            StopCoroutine(pendingAudioRestoreCoroutine);
+            pendingAudioRestoreCoroutine = null;
+        }
+
+        if (pendingVisibilityRecoveryCoroutine != null)
+        {
+            StopCoroutine(pendingVisibilityRecoveryCoroutine);
+            pendingVisibilityRecoveryCoroutine = null;
         }
     }
 
@@ -228,6 +251,9 @@ public class CDNARVideoController : MonoBehaviour
 
         movingFrames = 0;
         lastRecordedTimeForCheck = -1;
+        visibilityRecoveryAttempts = 0;
+        pendingSeekAfterPrepare = false;
+        RebindVideoOutputTargets();
 
         if (hasFinished || !resumeVideoOnRetrack)
         {
@@ -242,6 +268,14 @@ public class CDNARVideoController : MonoBehaviour
 
     private void OnPrepareCompleted(VideoPlayer vp)
     {
+        RebindVideoOutputTargets();
+
+        if (pendingSeekAfterPrepare)
+        {
+            vp.time = pendingSeekTime;
+            pendingSeekAfterPrepare = false;
+        }
+
         // If it finally finished background preparation and the AR image is currently being tracked, play!
         if (gameObject.activeInHierarchy)
         {
@@ -255,6 +289,12 @@ public class CDNARVideoController : MonoBehaviour
         {
             StopCoroutine(pendingAudioRestoreCoroutine);
             pendingAudioRestoreCoroutine = null;
+        }
+
+        if (pendingVisibilityRecoveryCoroutine != null)
+        {
+            StopCoroutine(pendingVisibilityRecoveryCoroutine);
+            pendingVisibilityRecoveryCoroutine = null;
         }
 
         ApplyWebGLAutoplayMute(false);
@@ -287,6 +327,8 @@ public class CDNARVideoController : MonoBehaviour
 
     private void PlayVideoWithWebGLAutoplayFallback()
     {
+        RebindVideoOutputTargets();
+
 #if UNITY_WEBGL && !UNITY_EDITOR
         SetWebGLCurrentTargetKey(webGLSoundTargetKey);
 
@@ -302,11 +344,13 @@ public class CDNARVideoController : MonoBehaviour
 
             videoPlayer.Play();
             pendingAudioRestoreCoroutine = StartCoroutine(RestoreAudioAfterPlaybackStarts(unlockSerialAtPlay));
+            StartVisibilityRecoveryWatch();
             return;
         }
 #endif
 
         videoPlayer.Play();
+        StartVisibilityRecoveryWatch();
     }
 
     private string ResolveWebGLSoundTargetKey()
@@ -325,6 +369,95 @@ public class CDNARVideoController : MonoBehaviour
         {
             webGLSoundTargetKey = targetId;
         }
+    }
+
+    private void RebindVideoOutputTargets()
+    {
+        if (videoPlayer == null)
+        {
+            return;
+        }
+
+        if (configuredRenderMode == VideoRenderMode.MaterialOverride)
+        {
+            if (configuredTargetRenderer == null)
+            {
+                configuredTargetRenderer = videoRenderer != null ? videoRenderer : GetComponent<Renderer>();
+                if (configuredTargetRenderer == null)
+                {
+                    configuredTargetRenderer = GetComponentInChildren<Renderer>();
+                }
+            }
+
+            if (configuredTargetRenderer != null)
+            {
+                videoPlayer.targetMaterialRenderer = configuredTargetRenderer;
+                videoRenderer = configuredTargetRenderer;
+            }
+
+            videoPlayer.targetMaterialProperty = configuredTargetMaterialProperty;
+            return;
+        }
+
+        if (configuredRenderMode == VideoRenderMode.RenderTexture)
+        {
+            videoPlayer.targetTexture = configuredTargetTexture;
+        }
+    }
+
+    private void StartVisibilityRecoveryWatch()
+    {
+        if (pendingVisibilityRecoveryCoroutine != null)
+        {
+            StopCoroutine(pendingVisibilityRecoveryCoroutine);
+        }
+
+        pendingVisibilityRecoveryCoroutine = StartCoroutine(RecoverInvisiblePlaybackIfNeeded());
+    }
+
+    private System.Collections.IEnumerator RecoverInvisiblePlaybackIfNeeded()
+    {
+        while (videoPlayer != null && !videoPlayer.isPlaying)
+        {
+            yield return null;
+        }
+
+        float elapsed = 0f;
+        while (videoPlayer != null && videoPlayer.isPlaying && elapsed < VisibilityRecoveryDelaySeconds)
+        {
+            if (videoRenderer == null || videoRenderer.enabled || IsVideoTextureReady())
+            {
+                pendingVisibilityRecoveryCoroutine = null;
+                yield break;
+            }
+
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (videoPlayer == null || !videoPlayer.isPlaying || videoRenderer == null || videoRenderer.enabled || IsVideoTextureReady())
+        {
+            pendingVisibilityRecoveryCoroutine = null;
+            yield break;
+        }
+
+        if (visibilityRecoveryAttempts >= MaxVisibilityRecoveryAttemptsPerTrack)
+        {
+            Debug.LogWarning($"[CDNARVideoController] Playback stayed audio-only for '{name}' after retrack. Recovery limit reached.");
+            pendingVisibilityRecoveryCoroutine = null;
+            yield break;
+        }
+
+        visibilityRecoveryAttempts++;
+        pendingSeekTime = resumeVideoOnRetrack ? videoPlayer.time : 0d;
+        pendingSeekAfterPrepare = resumeVideoOnRetrack && pendingSeekTime > 0.05d;
+
+        Debug.LogWarning($"[CDNARVideoController] Recovering invisible playback for '{name}' at {pendingSeekTime:0.00}s.");
+
+        RebindVideoOutputTargets();
+        videoPlayer.Pause();
+        videoPlayer.Prepare();
+        pendingVisibilityRecoveryCoroutine = null;
     }
 
     private System.Collections.IEnumerator RestoreAudioAfterPlaybackStarts(int unlockSerialAtPlay)
