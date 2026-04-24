@@ -193,6 +193,7 @@ namespace Imagine.WebAR
                 return;
 
             targets[id].transform.gameObject.SetActive(true);
+            targets[id].transform.gameObject.BroadcastMessage("OnWebGLTargetTrackingStateChanged", id, SendMessageOptions.DontRequireReceiver);
             
             if(!trackedIds.Contains(id))
                 trackedIds.Add(id);
@@ -433,4 +434,3 @@ namespace Imagine.WebAR
         }
     }
 }
-

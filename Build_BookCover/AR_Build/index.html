@@ -142,8 +142,12 @@
     <canvas id="video-canvas" style="width:100%; height:100%; object-fit:cover; position:absolute"></canvas>
     <div id="startARDiv" class="ctaDiv" style="display: none;">
         <select id="chooseCamSel" style="display: none;" onchange="SelectCam()"></select>
-        <p style="text-align: center; width:60vw;">This augmented reality experience requires access to your device's camera</p>
-        <button id="startARButton" onclick="StartAR()" style="display:none">ALLOW ACCESS</button>
+        <p id="startARText" style="text-align: center; width:60vw;">This augmented reality experience requires access to your device's camera</p>
+        <button id="startARButton" onclick="OnUserTapStart()" style="display:none">ALLOW ACCESS</button>
+    </div>
+    <div id="soundUnlockDiv" class="ctaDiv" style="display: none; background: rgba(0, 0, 0, 0.82);">
+        <p id="soundUnlockText" style="text-align: center; width:60vw; color:white;">Tap to enable sound for this AR video on iPhone/iPad.</p>
+        <button id="soundUnlockButton" onclick="OnUserTapEnableSound()" style="display:block">TAP FOR SOUND</button>
     </div>
     <div id="screenshotDiv" style="display: none;" class="ctaDiv">
         <div style="position:relative; background-color:white; padding:10px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.3), 0 6px 20px 0 rgba(0, 0, 0, 0.25);">
@@ -195,18 +199,317 @@
                 }
                 
                 await LoadWebcams();
-                StartAR(); // Automatically called instead of waiting for user click
+
+                if (requiresTapToStart) {
+                    ShowTapToStart();
+                    return;
+                }
+
+                StartAR();
             }
-            initialize();
             var container = document.querySelector("#unity-container");
             var canvas = document.querySelector("#unity-canvas");
             var loadingBar = document.querySelector("#unity-loading-bar");
             var progressBarFull = document.querySelector("#unity-progress-bar-full");
+            var startArDiv = document.getElementById("startARDiv");
+            var startArButton = document.getElementById("startARButton");
+            var startArText = document.getElementById("startARText");
+            var soundUnlockDiv = document.getElementById("soundUnlockDiv");
+            var soundUnlockButton = document.getElementById("soundUnlockButton");
+            var requiresTapToStart = IsAppleMobileBrowser();
+            var arExperienceStarted = false;
+            var mediaUnlockAudioContext = null;
+            var trackedContentVideos = [];
+            var currentSoundUnlockVideo = null;
+
+            window.__AR_REQUIRE_SOUND_GESTURE = requiresTapToStart;
+            window.__AR_SOUND_UNLOCK_SERIAL = window.__AR_SOUND_UNLOCK_SERIAL || 0;
+            window.__AR_CURRENT_TARGET_KEY = window.__AR_CURRENT_TARGET_KEY || "";
+            window.__AR_TARGET_SOUND_UNLOCKS = window.__AR_TARGET_SOUND_UNLOCKS || {};
+
+            EnsureInlineVideoPlayback(document.querySelector("#webcam-video"));
+            WatchVideoElementsForInlinePlayback();
+            document.querySelectorAll("video").forEach(RegisterContentVideo);
+            document.addEventListener("touchend", HandleGlobalMediaUnlockGesture, { passive: true });
+            document.addEventListener("click", HandleGlobalMediaUnlockGesture, true);
+
+            function IsAppleMobileBrowser() {
+                return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+            }
+
+            function IsContentVideo(videoElement) {
+                return !!videoElement && videoElement.tagName === "VIDEO" && videoElement.id !== "webcam-video";
+            }
+
+            function EnsureInlineVideoPlayback(videoElement) {
+                if (!videoElement) {
+                    return;
+                }
+
+                videoElement.setAttribute("playsinline", "");
+                videoElement.setAttribute("webkit-playsinline", "");
+                videoElement.playsInline = true;
+            }
+
+            function GetVideoTargetKey(videoElement) {
+                if (!videoElement) {
+                    return "";
+                }
+
+                if (window.__AR_CURRENT_TARGET_KEY) {
+                    videoElement.__arTargetKey = window.__AR_CURRENT_TARGET_KEY;
+                }
+
+                return videoElement.__arTargetKey || "";
+            }
+
+            function IsTargetSoundUnlocked(targetKey) {
+                return !!(targetKey && window.__AR_TARGET_SOUND_UNLOCKS[targetKey]);
+            }
+
+            function RegisterContentVideo(videoElement) {
+                if (!IsContentVideo(videoElement)) {
+                    return;
+                }
+
+                EnsureInlineVideoPlayback(videoElement);
+                GetVideoTargetKey(videoElement);
+
+                if (trackedContentVideos.indexOf(videoElement) === -1) {
+                    trackedContentVideos.push(videoElement);
+                }
+
+                if (videoElement.__arContentVideoRegistered) {
+                    return;
+                }
+
+                videoElement.__arContentVideoRegistered = true;
+                videoElement.addEventListener("playing", function() {
+                    var targetKey = GetVideoTargetKey(videoElement);
+                    var needsUnlock = requiresTapToStart && !IsTargetSoundUnlocked(targetKey);
+
+                    if (videoElement.__arAllowNextPlayWithSound) {
+                        videoElement.__arAllowNextPlayWithSound = false;
+                        return;
+                    }
+
+                    if (needsUnlock) {
+                        currentSoundUnlockVideo = videoElement;
+                        ShowSoundUnlockPrompt();
+                    }
+                });
+            }
+
+            function WatchVideoElementsForInlinePlayback() {
+                if (!window.MutationObserver || !document.body) {
+                    return;
+                }
+
+                var observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.tagName === "VIDEO") {
+                                RegisterContentVideo(node);
+                                return;
+                            }
+
+                            if (node.querySelectorAll) {
+                                node.querySelectorAll("video").forEach(RegisterContentVideo);
+                            }
+                        });
+                    });
+                });
+
+                observer.observe(document.body, { childList: true, subtree: true });
+            }
+
+            if (!window.__AR_MEDIA_PLAY_PATCHED) {
+                window.__AR_MEDIA_PLAY_PATCHED = true;
+                var originalMediaPlay = HTMLMediaElement.prototype.play;
+                HTMLMediaElement.prototype.play = function() {
+                    if (this.tagName === "VIDEO") {
+                        RegisterContentVideo(this);
+                        var targetKey = GetVideoTargetKey(this);
+                        var needsUnlock = IsContentVideo(this) && requiresTapToStart && !IsTargetSoundUnlocked(targetKey);
+
+                        if (needsUnlock && !this.__arAllowNextPlayWithSound) {
+                            currentSoundUnlockVideo = this;
+                            this.muted = true;
+                            this.defaultMuted = true;
+                            ShowSoundUnlockPrompt();
+                        }
+                    }
+
+                    return originalMediaPlay.apply(this, arguments);
+                };
+            }
+
+            function ShowTapToStart() {
+                var advLoader = document.getElementById("advanced-loader");
+                if (advLoader) {
+                    advLoader.style.display = "none";
+                }
+
+                HideSoundUnlockPrompt();
+
+                if (startArText) {
+                    startArText.innerText = "Tap to start the AR experience. This unlocks video and sound playback on iPhone and iPad.";
+                }
+
+                if (startArButton) {
+                    startArButton.innerText = "TAP TO START";
+                    startArButton.style.display = "block";
+                    startArButton.disabled = false;
+                }
+
+                if (startArDiv) {
+                    startArDiv.style.display = "flex";
+                }
+            }
+
+            function ShowSoundUnlockPrompt() {
+                var targetKey = currentSoundUnlockVideo ? GetVideoTargetKey(currentSoundUnlockVideo) : "";
+
+                if (!requiresTapToStart || !soundUnlockDiv || !currentSoundUnlockVideo || IsTargetSoundUnlocked(targetKey)) {
+                    return;
+                }
+
+                if (soundUnlockButton) {
+                    soundUnlockButton.disabled = false;
+                }
+
+                soundUnlockDiv.style.display = "flex";
+            }
+
+            function HideSoundUnlockPrompt() {
+                if (soundUnlockDiv) {
+                    soundUnlockDiv.style.display = "none";
+                }
+            }
+
+            function HasPendingSoundUnlock() {
+                return !!currentSoundUnlockVideo;
+            }
+
+            function HandleGlobalMediaUnlockGesture(event) {
+                if (!requiresTapToStart || !HasPendingSoundUnlock()) {
+                    return;
+                }
+
+                if (event && event.target && (event.target === startArButton || event.target === soundUnlockButton)) {
+                    return;
+                }
+
+                OnUserTapEnableSound();
+            }
+
+            async function UnlockMediaPlayback() {
+                var AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) {
+                    return;
+                }
+
+                if (!mediaUnlockAudioContext) {
+                    mediaUnlockAudioContext = new AudioContext();
+                }
+
+                if (mediaUnlockAudioContext.state === "suspended") {
+                    await mediaUnlockAudioContext.resume();
+                }
+
+                var buffer = mediaUnlockAudioContext.createBuffer(1, 1, 22050);
+                var source = mediaUnlockAudioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(mediaUnlockAudioContext.destination);
+                source.start(0);
+            }
+
+            async function OnUserTapStart() {
+                if (arExperienceStarted) {
+                    return;
+                }
+
+                if (startArButton) {
+                    startArButton.disabled = true;
+                }
+
+                try {
+                    await UnlockMediaPlayback();
+                } catch (error) {
+                    console.warn("[AR] Media unlock fallback failed:", error);
+                }
+
+                StartAR();
+            }
+
+            async function OnUserTapEnableSound() {
+                var video = currentSoundUnlockVideo;
+                if (!video) {
+                    return;
+                }
+
+                var targetKey = GetVideoTargetKey(video);
+
+                if (soundUnlockButton) {
+                    soundUnlockButton.disabled = true;
+                }
+
+                window.__AR_SOUND_UNLOCK_SERIAL += 1;
+
+                try {
+                    await UnlockMediaPlayback();
+                } catch (error) {
+                    console.warn("[AR] Sound unlock failed:", error);
+                }
+
+                try {
+                    EnsureInlineVideoPlayback(video);
+                    video.pause();
+                    video.__arAllowNextPlayWithSound = true;
+                    video.muted = false;
+                    video.defaultMuted = false;
+                    video.volume = 1;
+
+                    var playPromise = video.play();
+                    if (playPromise && playPromise.catch) {
+                        await playPromise.catch(function(error) {
+                            console.warn("[AR] Video replay with sound failed:", error);
+                        });
+                    }
+                    if (targetKey) {
+                        window.__AR_TARGET_SOUND_UNLOCKS[targetKey] = true;
+                    }
+                } catch (error) {
+                    video.__arAllowNextPlayWithSound = false;
+                    currentSoundUnlockVideo = video;
+                    console.warn("[AR] Unable to enable sound on video:", error);
+                    return;
+                }
+
+                currentSoundUnlockVideo = null;
+                HideSoundUnlockPrompt();
+            }
+
             function StartAR() {
+                if (arExperienceStarted) {
+                    return;
+                }
+
+                arExperienceStarted = true;
                 canvas.style.width = window.innerWidth + "px";
                 canvas.style.height = window.innerHeight + "px";
+
+                var advLoader = document.getElementById("advanced-loader");
+                if (advLoader) {
+                    advLoader.style.display = "flex";
+                }
                 
-                document.getElementById("startARDiv").style.display = "none";
+                if (startArDiv) {
+                    startArDiv.style.display = "none";
+                }
+
+                HideSoundUnlockPrompt();
                 createUnityInstance(document.querySelector("#unity-canvas"), {
                     dataUrl: "Build/AR_Build.data.unityweb",
                     frameworkUrl: "Build/AR_Build.framework.js.unityweb",
@@ -247,11 +550,15 @@
                     loadingBar.style.display = "none";
                     var advLoader = document.getElementById('advanced-loader');
                     if (advLoader) advLoader.style.display = "none";
+                }).catch((error) => {
+                    arExperienceStarted = false;
+                    console.error("Failed to create Unity instance:", error);
+                    ShowError("Failed to load the experience.");
                 });
                 loadingBar.style.display = "block";
             }
             //Set Facing Mode here ('environment', 'user', '')
-		window.unityFacingMode = "environment"
+            window.unityFacingMode = "environment"
             window.WEBCAM_SETTINGS = {
                 video: {
                     facingMode: unityFacingMode,
@@ -284,6 +591,7 @@
                 if(window.webcamStream)
                 {
                     const video = document.querySelector("#webcam-video");
+                    EnsureInlineVideoPlayback(video);
                     video.srcObject = webcamStream;
                     try {
                         await arCamera.startWebcam(video);
@@ -363,10 +671,22 @@
                 }
                 window.webcamStream = await navigator.mediaDevices.getUserMedia(window.WEBCAM_SETTINGS);
                 const video = document.querySelector("#webcam-video");
+                EnsureInlineVideoPlayback(video);
                 video.srcObject = webcamStream;
                 await arCamera.startWebcam(video);
             }
             function ShowError(error){
+                var advLoader = document.getElementById("advanced-loader");
+                if (advLoader) {
+                    advLoader.style.display = "none";
+                }
+
+                if (startArDiv) {
+                    startArDiv.style.display = "none";
+                }
+
+                HideSoundUnlockPrompt();
+
                 document.getElementById("errorDiv").style.display = "flex";
                 document.getElementById("errorText").innerHTML = error;
             }
@@ -379,6 +699,7 @@
             function ShowConfirmUrl(url){
                 window.location.assign(url);                
             }
+            initialize();
             window.ITRACKER_GLOBALS = {
                 //place global settings here
                 INTERNAL_SMOOTHFACTOR_POS: .075,

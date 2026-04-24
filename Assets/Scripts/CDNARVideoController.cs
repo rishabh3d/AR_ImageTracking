@@ -1,11 +1,21 @@
 using UnityEngine;
 using UnityEngine.Video;
+using System.Runtime.InteropServices;
 
 [RequireComponent(typeof(VideoPlayer))]
 public class CDNARVideoController : MonoBehaviour
 {
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")] private static extern int GetWebGLSoundUnlockSerial();
+    [DllImport("__Internal")] private static extern bool RequiresWebGLSoundUnlock();
+    [DllImport("__Internal")] private static extern void SetWebGLCurrentTargetKey(string targetKey);
+#endif
+
     [Tooltip("Optional: URL of the CDN-hosted video (e.g., .mp4 or .webm). Can also be assigned directly in the VideoPlayer component.")]
     public string cdnVideoUrl;
+
+    [Tooltip("Optional override for the sound prompt key used on WebGL/iOS. Leave empty to derive it from the parent target object.")]
+    public string webGLSoundTargetKey;
 
     [Tooltip("If true, the video resumes from exactly where it got paused. If false, it simply restarts from 0.0s every time the image is scanned.")]
     public bool resumeVideoOnRetrack = true;
@@ -32,10 +42,17 @@ public class CDNARVideoController : MonoBehaviour
     private Renderer videoRenderer;
     private double lastRecordedTimeForCheck = -1;
     private int movingFrames = 0;
+    private AudioSource targetAudioSource;
+    private Coroutine pendingAudioRestoreCoroutine;
 
     private void Awake()
     {
         VideoPlayer originalVP = GetComponent<VideoPlayer>();
+        if (string.IsNullOrEmpty(webGLSoundTargetKey))
+        {
+            webGLSoundTargetKey = ResolveWebGLSoundTargetKey();
+        }
+
         videoRenderer = GetComponent<Renderer>();
         if (videoRenderer == null)
         {
@@ -65,8 +82,9 @@ public class CDNARVideoController : MonoBehaviour
         videoPlayer.audioOutputMode = originalVP.audioOutputMode;
         if (originalVP.audioOutputMode == VideoAudioOutputMode.AudioSource)
         {
+            targetAudioSource = originalVP.GetTargetAudioSource(0);
             videoPlayer.EnableAudioTrack(0, originalVP.IsAudioTrackEnabled(0));
-            videoPlayer.SetTargetAudioSource(0, originalVP.GetTargetAudioSource(0));
+            videoPlayer.SetTargetAudioSource(0, targetAudioSource);
         }
 
         if (originalVP.renderMode == VideoRenderMode.MaterialOverride)
@@ -219,7 +237,7 @@ public class CDNARVideoController : MonoBehaviour
 
         // Because the VideoPlayer is persistent in the background, its internal memory remembers exactly where it paused!
         // Calling Play() resumes INSTANTLY with ZERO network buffering required after the first time.
-        videoPlayer.Play();
+        PlayVideoWithWebGLAutoplayFallback();
     }
 
     private void OnPrepareCompleted(VideoPlayer vp)
@@ -227,12 +245,20 @@ public class CDNARVideoController : MonoBehaviour
         // If it finally finished background preparation and the AR image is currently being tracked, play!
         if (gameObject.activeInHierarchy)
         {
-            videoPlayer.Play();
+            PlayVideoWithWebGLAutoplayFallback();
         }
     }
 
     private void OnDisable()
     {
+        if (pendingAudioRestoreCoroutine != null)
+        {
+            StopCoroutine(pendingAudioRestoreCoroutine);
+            pendingAudioRestoreCoroutine = null;
+        }
+
+        ApplyWebGLAutoplayMute(false);
+
         if (loadingIndicator != null)
         {
             loadingIndicator.SetActive(false);
@@ -257,5 +283,94 @@ public class CDNARVideoController : MonoBehaviour
         hasFinished = true;
         vp.Pause();
         vp.time = 0;
+    }
+
+    private void PlayVideoWithWebGLAutoplayFallback()
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        SetWebGLCurrentTargetKey(webGLSoundTargetKey);
+
+        if (RequiresWebGLSoundUnlock())
+        {
+            int unlockSerialAtPlay = GetWebGLSoundUnlockSerial();
+            ApplyWebGLAutoplayMute(true);
+
+            if (pendingAudioRestoreCoroutine != null)
+            {
+                StopCoroutine(pendingAudioRestoreCoroutine);
+            }
+
+            videoPlayer.Play();
+            pendingAudioRestoreCoroutine = StartCoroutine(RestoreAudioAfterPlaybackStarts(unlockSerialAtPlay));
+            return;
+        }
+#endif
+
+        videoPlayer.Play();
+    }
+
+    private string ResolveWebGLSoundTargetKey()
+    {
+        if (transform.parent != null)
+        {
+            return transform.parent.name;
+        }
+
+        return gameObject.name;
+    }
+
+    private void OnWebGLTargetTrackingStateChanged(string targetId)
+    {
+        if (!string.IsNullOrEmpty(targetId))
+        {
+            webGLSoundTargetKey = targetId;
+        }
+    }
+
+    private System.Collections.IEnumerator RestoreAudioAfterPlaybackStarts(int unlockSerialAtPlay)
+    {
+        while (videoPlayer != null && !videoPlayer.isPlaying)
+        {
+            yield return null;
+        }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        while (videoPlayer != null && videoPlayer.isPlaying && GetWebGLSoundUnlockSerial() == unlockSerialAtPlay)
+        {
+            yield return null;
+        }
+#endif
+
+        if (videoPlayer != null && videoPlayer.isPlaying)
+        {
+            ApplyWebGLAutoplayMute(false);
+        }
+
+        pendingAudioRestoreCoroutine = null;
+    }
+
+    private void ApplyWebGLAutoplayMute(bool muted)
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        if (videoPlayer == null)
+        {
+            return;
+        }
+
+        if (videoPlayer.audioOutputMode == VideoAudioOutputMode.AudioSource)
+        {
+            if (targetAudioSource != null)
+            {
+                targetAudioSource.mute = muted;
+            }
+
+            return;
+        }
+
+        if (videoPlayer.audioOutputMode == VideoAudioOutputMode.Direct)
+        {
+            videoPlayer.SetDirectAudioMute(0, muted);
+        }
+#endif
     }
 }

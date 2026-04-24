@@ -1,5 +1,5 @@
 // v1.8.0: PWA Service Worker for iTracker6 template
-var CACHE_NAME = 'itracker6-cache-v1';
+var CACHE_NAME = 'itracker6-cache-v7';
 
 // Install event - cache essential assets
 self.addEventListener('install', function(event) {
