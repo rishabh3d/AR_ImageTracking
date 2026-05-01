@@ -88,7 +88,7 @@
         }
         @keyframes barShimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         @keyframes logoReveal { 0% { clip-path: inset(0 100% 0 0); } 100% { clip-path: inset(0 0% 0 0); } }
-        @keyframes scanLine { 0% { top: -2px; } 100% { top: 100%; } }
+        @keyframes scanLine { 0% { transform:translateY(0); } 100% { transform:translateY(100vh); } }
         @keyframes hStreak {
             0%   { transform: translateX(-100%) scaleX(0.5); opacity: 0; }
             30%  { opacity: 1; }
@@ -108,7 +108,7 @@
         }
         /* Scan line */
         #advanced-loader::after {
-            content: ''; position: absolute; left: 0; right: 0; height: 2px;
+            content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px;
             background: linear-gradient(90deg, transparent, rgba(220,30,30,0.15), transparent);
             animation: scanLine 4s linear infinite; pointer-events: none; z-index: 10;
         }
@@ -192,7 +192,7 @@
             overflow: hidden;
         }
         .soundUnlockOverlay::after {
-            content:''; position:absolute; left:0;right:0; height:2px; background:linear-gradient(90deg,transparent,rgba(220,30,30,0.15),transparent); animation:scanLine 4s linear infinite; pointer-events:none; z-index:10;
+            content:''; position:absolute; left:0;right:0; top:0; height:2px; background:linear-gradient(90deg,transparent,rgba(220,30,30,0.15),transparent); animation:scanLine 4s linear infinite; pointer-events:none; z-index:10;
         }
 
         .soundUnlockCard {
@@ -878,6 +878,14 @@
                 }
 
                 HideSoundUnlockPrompt();
+                // PERFORMANCE OPTIMIZATION: Cache DOM queries outside the high-frequency progress callback
+                var _cachedAdvBar = document.getElementById('advanced-progress-bar');
+                var _cachedPctText = document.getElementById('percentage-text');
+                var _cachedRingFill = document.getElementById('loader-ring-fill');
+                var _cachedStatusEl = document.querySelector('.loader-status');
+                var _cachedTitleEl = document.querySelector('.loader-title');
+                var _lastPercent = -1;
+
                 createUnityInstance(document.querySelector("#unity-canvas"), {
                     dataUrl: "Build/{{{ DATA_FILENAME }}}",
                     frameworkUrl: "Build/{{{ FRAMEWORK_FILENAME }}}",
@@ -904,40 +912,36 @@
                         var displayProgress = Math.min(1, progress / 0.9);
                         var percent = Math.round(displayProgress * 100);
                         
+                        // Avoid DOM updates if percentage hasn't changed (reduces layout thrashing)
+                        if (percent === _lastPercent) return;
+                        _lastPercent = percent;
+                        
                         if (progressBarFull) progressBarFull.style.width = percent + "%";
                         
                         // Advanced loader logic
-                        var advBar = document.getElementById('advanced-progress-bar');
-                        if (advBar) advBar.style.width = percent + "%";
-                        
-                        var pctText = document.getElementById('percentage-text');
-                        if (pctText) pctText.innerHTML = percent + "<span>%</span>";
+                        if (_cachedAdvBar) _cachedAdvBar.style.width = percent + "%";
+                        if (_cachedPctText) _cachedPctText.innerHTML = percent + "<span>%</span>";
 
                         // SVG ring progress (circumference = 2 * PI * 60 ≈ 377)
-                        var ringFill = document.getElementById('loader-ring-fill');
-                        if (ringFill) {
+                        if (_cachedRingFill) {
                             var circumference = 2 * Math.PI * 60;
                             var offset = circumference - (displayProgress * circumference);
-                            ringFill.style.strokeDasharray = circumference;
-                            ringFill.style.strokeDashoffset = offset;
+                            _cachedRingFill.style.strokeDasharray = circumference;
+                            _cachedRingFill.style.strokeDashoffset = offset;
                         }
 
                         // Update status text
-                        var statusEl = document.querySelector('.loader-status');
-                        var dots = '<span class="loader-status-dots"><span>.</span><span>.</span><span>.</span></span>';
-                        if (statusEl) {
-                            if (percent < 30) statusEl.innerHTML = "Preparing AR Engine" + dots;
-                            else if (percent < 60) statusEl.innerHTML = "Loading Assets" + dots;
-                            else if (percent < 90) statusEl.innerHTML = "Almost Ready" + dots;
-                            else statusEl.innerHTML = "Starting Experience" + dots;
+                        if (_cachedStatusEl) {
+                            var dots = '<span class="loader-status-dots"><span>.</span><span>.</span><span>.</span></span>';
+                            if (percent < 30) _cachedStatusEl.innerHTML = "Preparing AR Engine" + dots;
+                            else if (percent < 60) _cachedStatusEl.innerHTML = "Loading Assets" + dots;
+                            else if (percent < 90) _cachedStatusEl.innerHTML = "Almost Ready" + dots;
+                            else _cachedStatusEl.innerHTML = "Starting Experience" + dots;
                         }
 
                         // Update title when initializing
-                        if (progress >= 0.9) {
-                            var title = document.querySelector('.loader-title');
-                            if (title && title.innerText !== "Launching") {
-                                title.innerText = "Launching";
-                            }
+                        if (progress >= 0.9 && _cachedTitleEl && _cachedTitleEl.innerText !== "Launching") {
+                            _cachedTitleEl.innerText = "Launching";
                         }
                     }
                 ).then((unityInstance) => {
