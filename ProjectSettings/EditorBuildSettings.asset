@@ -11,5 +11,8 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes_1/Demo-VisitingCard.unity
     guid: 0cafe59f1551781439322bee08a71d6e
+  - enabled: 0
+    path: Assets/Scenes_1/Demo-BookCover.unity
+    guid: 367661b5d83db4dbe85c10b475029e0b
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
