@@ -6,320 +6,412 @@ using UnityEngine.Video;
 using Imagine.WebAR;
 using System.Collections.Generic;
 
+/// <summary>
+/// AR Video Scene Generator
+/// Reads target image and video pixel dimensions, auto-generates correctly
+/// sized plane meshes at runtime, and wires up the full scene hierarchy.
+/// For green screen videos: Parent = target image BG mesh, Child = chroma key video mesh.
+/// </summary>
 public class ARAutomationWindow : EditorWindow
 {
-    private string targetId = "NewTarget";
+    // ─── Core inputs ────────────────────────────────────────────────
+    private string sceneName      = "AutoScene_1";
+    private string targetId       = "NewTarget";
     private Texture2D imageTexture;
-    private string cdnVideoUrl = "https://";
-    private string sceneName = "AutoScene_1";
-    
-    private Mesh customMesh;
+    private string cdnVideoUrl    = "https://";
+
+    // ─── Tracking image mesh ─────────────────────────────────────────
+    private bool overrideImageMesh = false;
+    private Mesh customImageMesh;
+
+    // ─── Green screen ────────────────────────────────────────────────
     private bool isGreenScreen = false;
     private Texture2D firstFrameTexture;
-    private Mesh videoMesh;           // separate mesh for the green screen video layer
-    private Vector2 videoSize = new Vector2(1f, 1f); // manual scale for video layer if no videoMesh
 
+    // Video layer dimensions (pixels) – used to auto-generate a mesh
+    private int videoWidthPx  = 1080;
+    private int videoHeightPx = 1920;
+    private bool overrideVideoMesh = false;
+    private Mesh customVideoMesh;
+
+    // ─── Mesh save folder ────────────────────────────────────────────
+    private const string MeshFolder = "Assets/AR_Assets/Planes/Generated";
+    private const string MatFolder  = "Assets/AR_Assets/Materials";
+    private const string TemplatePath = "Assets/Scenes_1/Demo-Video.unity";
+
+    // ─────────────────────────────────────────────────────────────────
     [MenuItem("Tools/AR Setup Automation")]
-    public static void ShowWindow()
-    {
+    public static void ShowWindow() =>
         GetWindow<ARAutomationWindow>("AR Setup Wizard");
-    }
 
+    // ─── GUI ─────────────────────────────────────────────────────────
     private void OnGUI()
     {
         GUILayout.Label("AR Video Scene Generator", EditorStyles.boldLabel);
-        GUILayout.Label("This tool duplicates the Demo-Video scene, sets up the CDN link,\nregisters the Image Target, and adds the scene to Build Settings.", EditorStyles.wordWrappedLabel);
-        GUILayout.Space(10);
+        EditorGUILayout.HelpBox(
+            "Provide your target image and CDN link. The tool will auto-generate " +
+            "correctly-sized plane meshes from the image pixel dimensions and wire " +
+            "everything up automatically.", MessageType.Info);
+        GUILayout.Space(8);
 
-        sceneName = EditorGUILayout.TextField("New Scene Name", sceneName);
-        targetId = EditorGUILayout.TextField("Target ID (No Spaces)", targetId);
-        imageTexture = (Texture2D)EditorGUILayout.ObjectField("Target Image", imageTexture, typeof(Texture2D), false);
-        cdnVideoUrl = EditorGUILayout.TextField("CDN Video URL", cdnVideoUrl);
-        
-        GUILayout.Space(10);
-        GUILayout.Label("Advanced Video Settings", EditorStyles.boldLabel);
-        customMesh = (Mesh)EditorGUILayout.ObjectField("Custom Mesh (Optional)", customMesh, typeof(Mesh), false);
-        
+        // ── Core ──
+        GUILayout.Label("Scene Info", EditorStyles.boldLabel);
+        sceneName    = EditorGUILayout.TextField("New Scene Name", sceneName);
+        targetId     = EditorGUILayout.TextField("Target ID (no spaces)", targetId);
+        cdnVideoUrl  = EditorGUILayout.TextField("CDN Video URL", cdnVideoUrl);
+        GUILayout.Space(8);
+
+        // ── Tracking image ──
+        GUILayout.Label("Tracking Image", EditorStyles.boldLabel);
+        imageTexture = (Texture2D)EditorGUILayout.ObjectField(
+            "Target Image", imageTexture, typeof(Texture2D), false);
+
+        if (imageTexture != null)
+        {
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.TextField("  Auto size",
+                $"{imageTexture.width} × {imageTexture.height} px");
+            EditorGUI.EndDisabledGroup();
+        }
+
+        overrideImageMesh = EditorGUILayout.Toggle("  Override with custom mesh", overrideImageMesh);
+        if (overrideImageMesh)
+        {
+            customImageMesh = (Mesh)EditorGUILayout.ObjectField(
+                "  Custom Image Mesh", customImageMesh, typeof(Mesh), false);
+        }
+        GUILayout.Space(8);
+
+        // ── Green screen ──
+        GUILayout.Label("Video Settings", EditorStyles.boldLabel);
         isGreenScreen = EditorGUILayout.Toggle("Is Green Screen Video?", isGreenScreen);
+
         if (isGreenScreen)
         {
-            firstFrameTexture = (Texture2D)EditorGUILayout.ObjectField("First Frame Image", firstFrameTexture, typeof(Texture2D), false);
-            
-            EditorGUILayout.Space(4);
-            GUILayout.Label("Video Layer Size (independent from tracking image)", EditorStyles.miniLabel);
-            videoMesh = (Mesh)EditorGUILayout.ObjectField("  Video Mesh (Optional)", videoMesh, typeof(Mesh), false);
-            if (videoMesh == null)
+            firstFrameTexture = (Texture2D)EditorGUILayout.ObjectField(
+                "  First Frame Image", firstFrameTexture, typeof(Texture2D), false);
+
+            GUILayout.Space(4);
+            GUILayout.Label("  Video Layer Dimensions", EditorStyles.miniLabel);
+            videoWidthPx  = EditorGUILayout.IntField("    Width (px)",  videoWidthPx);
+            videoHeightPx = EditorGUILayout.IntField("    Height (px)", videoHeightPx);
+            EditorGUILayout.HelpBox(
+                "A plane mesh will be auto-generated from these dimensions and saved to " +
+                MeshFolder, MessageType.None);
+
+            overrideVideoMesh = EditorGUILayout.Toggle("  Override with custom mesh", overrideVideoMesh);
+            if (overrideVideoMesh)
             {
-                videoSize = EditorGUILayout.Vector2Field("  Video Scale (W x H)", videoSize);
-                EditorGUILayout.HelpBox("If no Video Mesh is set, the video layer will use these W/H scale values on a default Quad.", MessageType.Info);
+                customVideoMesh = (Mesh)EditorGUILayout.ObjectField(
+                    "  Custom Video Mesh", customVideoMesh, typeof(Mesh), false);
             }
         }
 
-        GUILayout.Space(20);
+        GUILayout.Space(16);
 
-        if (GUILayout.Button("Create Scene & Setup AR", GUILayout.Height(40)))
+        GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f);
+        if (GUILayout.Button("▶  Create Scene & Setup AR", GUILayout.Height(44)))
         {
             SetupScene();
         }
+        GUI.backgroundColor = Color.white;
     }
 
+    // ─── Main logic ───────────────────────────────────────────────────
     private void SetupScene()
     {
-        if (string.IsNullOrEmpty(targetId) || imageTexture == null || string.IsNullOrEmpty(cdnVideoUrl) || string.IsNullOrEmpty(sceneName))
+        // Validate
+        if (string.IsNullOrEmpty(targetId) || imageTexture == null ||
+            string.IsNullOrEmpty(cdnVideoUrl) || string.IsNullOrEmpty(sceneName))
         {
-            EditorUtility.DisplayDialog("Error", "Please fill in all fields (Scene Name, Target ID, Image, and CDN URL).", "OK");
+            EditorUtility.DisplayDialog("Missing info",
+                "Please fill in: Scene Name, Target ID, Target Image, and CDN URL.", "OK");
             return;
         }
 
-        // 1. Add/Update Target in Global Settings
-        var globalSettings = Resources.Load<ImageTrackerGlobalSettings>("ImageTrackerGlobalSettings");
-        if (globalSettings != null)
+        if (!System.IO.File.Exists(TemplatePath))
         {
-            bool found = false;
-            if (globalSettings.imageTargetInfos == null)
-            {
-                globalSettings.imageTargetInfos = new List<ImageTargetInfo>();
-            }
-            foreach (var info in globalSettings.imageTargetInfos)
-            {
-                if (info.id == targetId)
-                {
-                    info.texture = imageTexture;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                globalSettings.imageTargetInfos.Add(new ImageTargetInfo { id = targetId, texture = imageTexture });
-            }
-            EditorUtility.SetDirty(globalSettings);
-            AssetDatabase.SaveAssets();
-        }
-        else
-        {
-            EditorUtility.DisplayDialog("Warning", "Could not find ImageTrackerGlobalSettings in Resources. You may need to register the image manually.", "OK");
+            EditorUtility.DisplayDialog("Error",
+                "Template scene not found at:\n" + TemplatePath, "OK");
+            return;
         }
 
-        // 2. Duplicate Demo-Video.unity
-        string templatePath = "Assets/Scenes_1/Demo-Video.unity";
+        // Ensure asset folders exist
+        EnsureFolder(MeshFolder);
+        EnsureFolder(MatFolder);
+
+        // ── 1. Register in Global Settings ──
+        RegisterImageTarget();
+
+        // ── 2. Duplicate template scene ──
         string newScenePath = "Assets/Scenes_1/" + sceneName + ".unity";
-
-        if (!System.IO.File.Exists(templatePath))
-        {
-            EditorUtility.DisplayDialog("Error", "Template scene not found at: " + templatePath + "\nPlease create a working template scene first.", "OK");
-            return;
-        }
-
-        bool copySuccess = AssetDatabase.CopyAsset(templatePath, newScenePath);
-        if (!copySuccess)
+        if (!AssetDatabase.CopyAsset(TemplatePath, newScenePath))
         {
             EditorUtility.DisplayDialog("Error", "Failed to duplicate template scene.", "OK");
             return;
         }
 
-        // Open the new scene
         Scene newScene = EditorSceneManager.OpenScene(newScenePath, OpenSceneMode.Single);
 
-        // 3. Find ImageTracker and update Target ID
+        // ── 3. Clean up ImageTracker – keep only slot 0, rename ──
+        CleanImageTracker();
+
+        // ── 4. Find CDNARVideoController ──
 #if UNITY_2023_1_OR_NEWER
-        var trackerScript = Object.FindFirstObjectByType<ImageTracker>(FindObjectsInactive.Include);
+        var cdn = Object.FindFirstObjectByType<CDNARVideoController>(FindObjectsInactive.Include);
 #else
-        var trackerScript = Object.FindObjectOfType<ImageTracker>(true);
+        var cdn = Object.FindObjectOfType<CDNARVideoController>(true);
 #endif
 
-        if (trackerScript != null)
+        if (cdn == null)
         {
-            var prop = new SerializedObject(trackerScript);
-            var imageTargetsProp = prop.FindProperty("imageTargets");
-            if (imageTargetsProp != null && imageTargetsProp.arraySize > 0)
-            {
-                Transform templateTransform = (Transform)imageTargetsProp.GetArrayElementAtIndex(0).FindPropertyRelative("transform").objectReferenceValue;
-
-                // Delete all other target transforms
-                for (int i = 1; i < imageTargetsProp.arraySize; i++)
-                {
-                    Transform t = (Transform)imageTargetsProp.GetArrayElementAtIndex(i).FindPropertyRelative("transform").objectReferenceValue;
-                    if (t != null && t.gameObject != null)
-                    {
-                        DestroyImmediate(t.gameObject);
-                    }
-                }
-
-                if (templateTransform != null)
-                {
-                    templateTransform.name = targetId;
-                }
-
-                imageTargetsProp.arraySize = 1;
-                var element = imageTargetsProp.GetArrayElementAtIndex(0);
-                element.FindPropertyRelative("id").stringValue = targetId;
-                prop.ApplyModifiedProperties();
-            }
+            Debug.LogWarning("CDNARVideoController not found. Make sure Demo-Video template has one.");
         }
         else
         {
-            Debug.LogWarning("Could not find ImageTracker in the scene. Make sure your template has one.");
-        }
+            // Set CDN url + sound key
+            var sp = new SerializedObject(cdn);
+            sp.FindProperty("cdnVideoUrl").stringValue = cdnVideoUrl;
+            sp.FindProperty("webGLSoundTargetKey").stringValue = targetId;
+            sp.ApplyModifiedProperties();
 
-        // 4. Find CDNARVideoController AFTER deleting others, so we get the remaining one
-#if UNITY_2023_1_OR_NEWER
-        var cdnController = Object.FindFirstObjectByType<CDNARVideoController>(FindObjectsInactive.Include);
-#else
-        var cdnController = Object.FindObjectOfType<CDNARVideoController>(true);
-#endif
-
-        if (cdnController != null)
-        {
-            // The controller is attached to the CHILD object (e.g. "Modi vid")
-            GameObject childObj = cdnController.gameObject;
+            GameObject childObj  = cdn.gameObject;
             GameObject parentObj = childObj.transform.parent.gameObject;
 
-            // Enforce correct naming format
             parentObj.name = targetId;
-            childObj.name = targetId + " vid";
+            childObj.name  = targetId + " vid";
 
-            var prop = new SerializedObject(cdnController);
-            prop.FindProperty("cdnVideoUrl").stringValue = cdnVideoUrl;
-            prop.FindProperty("webGLSoundTargetKey").stringValue = targetId;
-            prop.ApplyModifiedProperties();
-            
-            // Adjust the aspect ratio and setup custom mesh on PARENT
-            MeshFilter parentMf = parentObj.GetComponent<MeshFilter>();
-            if (parentMf == null) parentMf = parentObj.AddComponent<MeshFilter>();
+            VideoPlayer vp = cdn.GetComponent<VideoPlayer>();
 
-            if (customMesh != null)
-            {
-                parentMf.sharedMesh = customMesh;
-                parentObj.transform.localScale = Vector3.one;
-            }
-            else if (imageTexture != null)
-            {
-                float aspect = (float)imageTexture.width / imageTexture.height;
-                parentObj.transform.localScale = new Vector3(aspect, 1, 1);
-            }
+            // ── Build / assign parent (tracking image) mesh ──
+            Mesh imgMesh = overrideImageMesh && customImageMesh != null
+                ? customImageMesh
+                : GetOrCreateMesh(imageTexture.width, imageTexture.height, targetId + "_TrackImg");
 
-            Renderer parentRenderer = parentObj.GetComponent<Renderer>();
-            if (parentRenderer == null) parentRenderer = parentObj.AddComponent<MeshRenderer>();
-            VideoPlayer vp = cdnController.GetComponent<VideoPlayer>();
+            SetupParentObject(parentObj, imgMesh);
 
-            string matFolder = "Assets/AR_Assets/Materials";
-            if (!System.IO.Directory.Exists(matFolder))
-            {
-                System.IO.Directory.CreateDirectory(matFolder);
-            }
-
+            // ── Materials & child (video) layer ──
             if (!isGreenScreen)
             {
-                // NORMAL VIDEO
-                // Create 1 Material for the parent, target image assigned to it
-                Material newMat = new Material(Shader.Find("Unlit/Texture"));
-                newMat.name = targetId + "_Mat";
-                newMat.mainTexture = imageTexture;
-                AssetDatabase.CreateAsset(newMat, matFolder + "/" + newMat.name + ".mat");
-                
-                parentRenderer.sharedMaterial = newMat;
-
-                // Ensure child has NO renderer (if duplicating from a green screen template)
-                MeshRenderer childRend = childObj.GetComponent<MeshRenderer>();
-                if (childRend != null) DestroyImmediate(childRend);
-                MeshFilter childFilt = childObj.GetComponent<MeshFilter>();
-                if (childFilt != null) DestroyImmediate(childFilt);
-
-                // Video plays directly on the parent's material
-                if (vp != null) vp.targetMaterialRenderer = parentRenderer;
+                SetupNormalVideo(parentObj, childObj, vp);
             }
             else
             {
-                // GREEN SCREEN VIDEO
-                // Material 1: Parent (Target Image Background)
-                Material bgMat = new Material(Shader.Find("Unlit/Texture"));
-                bgMat.name = targetId + "_BGMat";
-                bgMat.mainTexture = imageTexture;
-                AssetDatabase.CreateAsset(bgMat, matFolder + "/" + bgMat.name + ".mat");
-                parentRenderer.sharedMaterial = bgMat;
+                Mesh vidMesh = overrideVideoMesh && customVideoMesh != null
+                    ? customVideoMesh
+                    : GetOrCreateMesh(videoWidthPx, videoHeightPx, targetId + "_Vid");
 
-                // Material 2: Child (Chroma Key with First Frame Image)
-                Shader chromaShader = Shader.Find("Imagine/ChromaKeyCutout");
-                Material chromaMat = chromaShader != null ? new Material(chromaShader) : new Material(Shader.Find("Unlit/Transparent"));
-                chromaMat.name = targetId + "_ChromaMat";
-                if (firstFrameTexture != null) chromaMat.mainTexture = firstFrameTexture;
-                
-                if (chromaShader != null)
-                {
-                    chromaMat.SetColor("_MaskCol", Color.green);
-                    chromaMat.SetFloat("_Sensitivity", 0.35f);
-                    chromaMat.SetFloat("_Cutoff", 0.134f);
-                    chromaMat.SetFloat("_Feather", 1f);
-                }
-                AssetDatabase.CreateAsset(chromaMat, matFolder + "/" + chromaMat.name + ".mat");
-
-                // Ensure child HAS a renderer
-                MeshFilter childFilt = childObj.GetComponent<MeshFilter>();
-                if (childFilt == null) childFilt = childObj.AddComponent<MeshFilter>();
-
-                // Decide mesh for the video layer independently from the tracking image layer
-                if (videoMesh != null)
-                {
-                    // User provided a separate mesh specifically for the video layer
-                    childFilt.sharedMesh = videoMesh;
-                    childObj.transform.localScale = Vector3.one; // mesh has baked size
-                }
-                else
-                {
-                    // Use the same default Quad as parent but scale it independently
-                    childFilt.sharedMesh = parentMf.sharedMesh;
-                    // Scale the child relative to the PARENT's local space.
-                    // Parent world scale = (aspect, 1, 1). Child localScale divides into that.
-                    // So we compute what localScale gives us the desired WORLD size.
-                    float parentScaleX = parentObj.transform.localScale.x > 0 ? parentObj.transform.localScale.x : 1f;
-                    float parentScaleY = parentObj.transform.localScale.y > 0 ? parentObj.transform.localScale.y : 1f;
-                    childObj.transform.localScale = new Vector3(
-                        videoSize.x / parentScaleX,
-                        videoSize.y / parentScaleY,
-                        1f);
-                }
-
-                MeshRenderer childRend = childObj.GetComponent<MeshRenderer>();
-                if (childRend == null) childRend = childObj.AddComponent<MeshRenderer>();
-                childRend.sharedMaterial = chromaMat;
-
-                // Position child slightly in front to avoid Z-fighting
-                childObj.transform.localPosition = new Vector3(0, 0, -0.001f);
-                childObj.transform.localRotation = Quaternion.identity;
-
-                // Video plays on the child's chroma material
-                if (vp != null) vp.targetMaterialRenderer = childRend;
+                SetupGreenScreenVideo(parentObj, childObj, vp, vidMesh);
             }
         }
-        else
-        {
-            Debug.LogWarning("Could not find CDNARVideoController in the scene. Make sure your template has one.");
-        }
 
-        // Save Scene
+        // ── 5. Save scene & add to Build Settings ──
         EditorSceneManager.SaveScene(newScene);
+        AddToBuildSettings(newScenePath);
 
-        // Add to Build Settings if not already there
-        var original = EditorBuildSettings.scenes;
-        bool sceneExistsInBuild = false;
-        foreach (var s in original)
+        EditorUtility.DisplayDialog("✅ Done",
+            $"Scene '{sceneName}' created!\n\n" +
+            "• Mesh(es) auto-generated from pixel dimensions\n" +
+            "• Materials created in AR_Assets/Materials\n" +
+            "• Scene added to Build Settings", "Awesome!");
+    }
+
+    // ─── Register image target ────────────────────────────────────────
+    private void RegisterImageTarget()
+    {
+        var gs = Resources.Load<ImageTrackerGlobalSettings>("ImageTrackerGlobalSettings");
+        if (gs == null) { Debug.LogWarning("ImageTrackerGlobalSettings not found."); return; }
+
+        if (gs.imageTargetInfos == null) gs.imageTargetInfos = new List<ImageTargetInfo>();
+
+        bool found = false;
+        foreach (var info in gs.imageTargetInfos)
         {
-            if (s.path == newScenePath)
-            {
-                sceneExistsInBuild = true;
-                break;
-            }
+            if (info.id != targetId) continue;
+            info.texture = imageTexture;
+            found = true;
+            break;
+        }
+        if (!found) gs.imageTargetInfos.Add(new ImageTargetInfo { id = targetId, texture = imageTexture });
+
+        EditorUtility.SetDirty(gs);
+        AssetDatabase.SaveAssets();
+    }
+
+    // ─── Clean ImageTracker component ────────────────────────────────
+    private void CleanImageTracker()
+    {
+#if UNITY_2023_1_OR_NEWER
+        var tracker = Object.FindFirstObjectByType<ImageTracker>(FindObjectsInactive.Include);
+#else
+        var tracker = Object.FindObjectOfType<ImageTracker>(true);
+#endif
+        if (tracker == null) return;
+
+        var so = new SerializedObject(tracker);
+        var targets = so.FindProperty("imageTargets");
+        if (targets == null || targets.arraySize == 0) return;
+
+        // Keep slot 0 transform; destroy others
+        Transform keep = (Transform)targets.GetArrayElementAtIndex(0)
+                          .FindPropertyRelative("transform").objectReferenceValue;
+
+        for (int i = 1; i < targets.arraySize; i++)
+        {
+            Transform t = (Transform)targets.GetArrayElementAtIndex(i)
+                           .FindPropertyRelative("transform").objectReferenceValue;
+            if (t != null) DestroyImmediate(t.gameObject);
         }
 
-        if (!sceneExistsInBuild)
-        {
-            var newScenes = new EditorBuildSettingsScene[original.Length + 1];
-            System.Array.Copy(original, newScenes, original.Length);
-            newScenes[newScenes.Length - 1] = new EditorBuildSettingsScene(newScenePath, true);
-            EditorBuildSettings.scenes = newScenes;
-        }
+        if (keep != null) keep.name = targetId;
 
-        EditorUtility.DisplayDialog("Success", "AR Scene created successfully!\n\nIt has been added to the Build Settings.\nYou can now hit Build and play.", "Awesome");
+        targets.arraySize = 1;
+        targets.GetArrayElementAtIndex(0).FindPropertyRelative("id").stringValue = targetId;
+        so.ApplyModifiedProperties();
+    }
+
+    // ─── Auto-generate or reuse a plane mesh from pixel dimensions ───
+    /// <summary>
+    /// Creates a unit Quad scaled to pixel dimensions stored in centimetres
+    /// (1 px = 0.01 cm, matching the BookCover.mesh convention in this project).
+    /// The mesh is saved as an asset so it appears in the project and can be reused.
+    /// </summary>
+    private Mesh GetOrCreateMesh(int widthPx, int heightPx, string meshName)
+    {
+        string path = $"{MeshFolder}/{meshName}_{widthPx}x{heightPx}.mesh";
+        Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+        if (existing != null) return existing;
+
+        // Scale: treat pixels as centimetres ÷ 100  →  1080px = 10.80 units
+        float w = widthPx  / 100f;
+        float h = heightPx / 100f;
+
+        Mesh mesh = new Mesh { name = meshName };
+        mesh.vertices = new Vector3[]
+        {
+            new Vector3(-w * 0.5f, -h * 0.5f, 0),
+            new Vector3( w * 0.5f, -h * 0.5f, 0),
+            new Vector3(-w * 0.5f,  h * 0.5f, 0),
+            new Vector3( w * 0.5f,  h * 0.5f, 0),
+        };
+        mesh.uv = new Vector2[]
+        {
+            new Vector2(0, 0), new Vector2(1, 0),
+            new Vector2(0, 1), new Vector2(1, 1),
+        };
+        mesh.triangles  = new int[] { 0, 2, 1, 2, 3, 1 };
+        mesh.normals    = new Vector3[] { Vector3.back, Vector3.back, Vector3.back, Vector3.back };
+        mesh.RecalculateBounds();
+
+        AssetDatabase.CreateAsset(mesh, path);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[AR Automation] Mesh generated: {path}  ({w}×{h} units)");
+        return mesh;
+    }
+
+    // ─── Parent object: assign mesh, keep scale = 1 ──────────────────
+    private void SetupParentObject(GameObject parentObj, Mesh mesh)
+    {
+        MeshFilter mf = parentObj.GetComponent<MeshFilter>() ?? parentObj.AddComponent<MeshFilter>();
+        mf.sharedMesh = mesh;
+
+        // Since mesh is dimensionally correct, reset scale to (1,1,1)
+        parentObj.transform.localScale = Vector3.one;
+
+        // Ensure MeshRenderer exists
+        if (parentObj.GetComponent<MeshRenderer>() == null)
+            parentObj.AddComponent<MeshRenderer>();
+    }
+
+    // ─── Normal video: 1 material on parent, video → parent renderer ─
+    private void SetupNormalVideo(GameObject parentObj, GameObject childObj, VideoPlayer vp)
+    {
+        // Material: Unlit/Texture + target image
+        Material mat = new Material(Shader.Find("Unlit/Texture"))
+        {
+            name = targetId + "_Mat",
+            mainTexture = imageTexture
+        };
+        AssetDatabase.CreateAsset(mat, $"{MatFolder}/{mat.name}.mat");
+
+        var rend = parentObj.GetComponent<Renderer>();
+        rend.sharedMaterial = mat;
+
+        // Remove any lingering mesh/renderer on child
+        Destroy<MeshRenderer>(childObj);
+        Destroy<MeshFilter>(childObj);
+
+        if (vp != null) vp.targetMaterialRenderer = rend;
+    }
+
+    // ─── Green screen: 2 materials, 2 meshes ─────────────────────────
+    private void SetupGreenScreenVideo(GameObject parentObj, GameObject childObj,
+                                       VideoPlayer vp, Mesh vidMesh)
+    {
+        // Material 1: background (target image, Unlit)
+        Material bgMat = new Material(Shader.Find("Unlit/Texture"))
+        {
+            name = targetId + "_BGMat",
+            mainTexture = imageTexture
+        };
+        AssetDatabase.CreateAsset(bgMat, $"{MatFolder}/{bgMat.name}.mat");
+        parentObj.GetComponent<Renderer>().sharedMaterial = bgMat;
+
+        // Material 2: chroma key (first frame on child)
+        Shader chromaShader = Shader.Find("Imagine/ChromaKeyCutout");
+        Material chromaMat = new Material(chromaShader != null
+            ? chromaShader : Shader.Find("Unlit/Transparent"))
+        {
+            name = targetId + "_ChromaMat"
+        };
+        if (chromaShader != null)
+        {
+            chromaMat.SetColor("_MaskCol", Color.green);
+            chromaMat.SetFloat("_Sensitivity", 0.35f);
+            chromaMat.SetFloat("_Cutoff", 0.134f);
+            chromaMat.SetFloat("_Feather", 1f);
+        }
+        if (firstFrameTexture != null) chromaMat.mainTexture = firstFrameTexture;
+        AssetDatabase.CreateAsset(chromaMat, $"{MatFolder}/{chromaMat.name}.mat");
+
+        // Child mesh
+        MeshFilter childMf = childObj.GetComponent<MeshFilter>() ?? childObj.AddComponent<MeshFilter>();
+        childMf.sharedMesh = vidMesh;
+
+        MeshRenderer childRend = childObj.GetComponent<MeshRenderer>() ?? childObj.AddComponent<MeshRenderer>();
+        childRend.sharedMaterial = chromaMat;
+
+        // Keep child at same local origin; slightly in front to avoid Z-fighting
+        childObj.transform.localPosition = new Vector3(0, 0, -0.001f);
+        childObj.transform.localRotation = Quaternion.identity;
+        childObj.transform.localScale    = Vector3.one;  // mesh is already dimensionally correct
+
+        if (vp != null) vp.targetMaterialRenderer = childRend;
+    }
+
+    // ─── Add scene to Build Settings ─────────────────────────────────
+    private static void AddToBuildSettings(string scenePath)
+    {
+        var existing = EditorBuildSettings.scenes;
+        foreach (var s in existing)
+            if (s.path == scenePath) return;
+
+        var updated = new EditorBuildSettingsScene[existing.Length + 1];
+        System.Array.Copy(existing, updated, existing.Length);
+        updated[updated.Length - 1] = new EditorBuildSettingsScene(scenePath, true);
+        EditorBuildSettings.scenes = updated;
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────
+    private static void EnsureFolder(string assetPath)
+    {
+        if (!System.IO.Directory.Exists(assetPath))
+            System.IO.Directory.CreateDirectory(assetPath);
+    }
+
+    private static void Destroy<T>(GameObject go) where T : Component
+    {
+        var c = go.GetComponent<T>();
+        if (c != null) DestroyImmediate(c);
     }
 }
