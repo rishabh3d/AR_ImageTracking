@@ -16,6 +16,8 @@ public class ARAutomationWindow : EditorWindow
     private Mesh customMesh;
     private bool isGreenScreen = false;
     private Texture2D firstFrameTexture;
+    private Mesh videoMesh;           // separate mesh for the green screen video layer
+    private Vector2 videoSize = new Vector2(1f, 1f); // manual scale for video layer if no videoMesh
 
     [MenuItem("Tools/AR Setup Automation")]
     public static void ShowWindow()
@@ -42,6 +44,15 @@ public class ARAutomationWindow : EditorWindow
         if (isGreenScreen)
         {
             firstFrameTexture = (Texture2D)EditorGUILayout.ObjectField("First Frame Image", firstFrameTexture, typeof(Texture2D), false);
+            
+            EditorGUILayout.Space(4);
+            GUILayout.Label("Video Layer Size (independent from tracking image)", EditorStyles.miniLabel);
+            videoMesh = (Mesh)EditorGUILayout.ObjectField("  Video Mesh (Optional)", videoMesh, typeof(Mesh), false);
+            if (videoMesh == null)
+            {
+                videoSize = EditorGUILayout.Vector2Field("  Video Scale (W x H)", videoSize);
+                EditorGUILayout.HelpBox("If no Video Mesh is set, the video layer will use these W/H scale values on a default Quad.", MessageType.Info);
+            }
         }
 
         GUILayout.Space(20);
@@ -246,7 +257,28 @@ public class ARAutomationWindow : EditorWindow
                 // Ensure child HAS a renderer
                 MeshFilter childFilt = childObj.GetComponent<MeshFilter>();
                 if (childFilt == null) childFilt = childObj.AddComponent<MeshFilter>();
-                childFilt.sharedMesh = parentMf.sharedMesh;
+
+                // Decide mesh for the video layer independently from the tracking image layer
+                if (videoMesh != null)
+                {
+                    // User provided a separate mesh specifically for the video layer
+                    childFilt.sharedMesh = videoMesh;
+                    childObj.transform.localScale = Vector3.one; // mesh has baked size
+                }
+                else
+                {
+                    // Use the same default Quad as parent but scale it independently
+                    childFilt.sharedMesh = parentMf.sharedMesh;
+                    // Scale the child relative to the PARENT's local space.
+                    // Parent world scale = (aspect, 1, 1). Child localScale divides into that.
+                    // So we compute what localScale gives us the desired WORLD size.
+                    float parentScaleX = parentObj.transform.localScale.x > 0 ? parentObj.transform.localScale.x : 1f;
+                    float parentScaleY = parentObj.transform.localScale.y > 0 ? parentObj.transform.localScale.y : 1f;
+                    childObj.transform.localScale = new Vector3(
+                        videoSize.x / parentScaleX,
+                        videoSize.y / parentScaleY,
+                        1f);
+                }
 
                 MeshRenderer childRend = childObj.GetComponent<MeshRenderer>();
                 if (childRend == null) childRend = childObj.AddComponent<MeshRenderer>();
@@ -255,7 +287,6 @@ public class ARAutomationWindow : EditorWindow
                 // Position child slightly in front to avoid Z-fighting
                 childObj.transform.localPosition = new Vector3(0, 0, -0.001f);
                 childObj.transform.localRotation = Quaternion.identity;
-                childObj.transform.localScale = Vector3.one;
 
                 // Video plays on the child's chroma material
                 if (vp != null) vp.targetMaterialRenderer = childRend;
